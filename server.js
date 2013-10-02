@@ -1,11 +1,12 @@
 var http = require('http');
 var httpProxy = require('http-proxy');
-var ResourceManager = require('lib/rm.js');
-var resolve = require('lib/resolve.js');
+var ResourceManager = require('./lib/rm.js');
+var resolve = require('./lib/resolve.js');
 
 // Initialize the resource manager
-var rm = new ResourceManager();
-var initialInstances = require('instances');
+var rm = new ResourceManager("bar");
+var initialInstances = require('./instances');
+console.log(initialInstances);
 rm.bootstrap(initialInstances);
 
 // Start proxy server
