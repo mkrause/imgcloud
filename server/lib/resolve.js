@@ -1,10 +1,16 @@
-var balancer = require('balancer');
+var balancer = require('./balancer');
 var cookie = require('cookie');
+var Memcached = require('memcached');
 
-exports.resolve = function(req, rm) {
-    var headers = cookie.parse(req.headers["Cookie"]);
-    var sessionId = headers["sessionId"];
-    
+var mem = new Memcached();
+
+module.exports = function resolve(req, rm) {
+    var sessionId;
+    if(req.headers["cookie"]) {
+        var headers = cookie.parse(req.headers["cookie"]);
+         sessionId = headers["sessionId"];
+    }
+
     var instance;
     if (sessionId && mem.hasKey(sessionId)) {
         // Already have an instance for this session? Use it
@@ -15,6 +21,5 @@ exports.resolve = function(req, rm) {
     if (!instance) {
         instance = balancer.balance(rm);
     }
-    
     return instance;
 }

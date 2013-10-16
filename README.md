@@ -1,4 +1,4 @@
-cloudr
-======
+# imgCloud
 
-Cloud-based image processing application
+Cloud-based image processing application.
+

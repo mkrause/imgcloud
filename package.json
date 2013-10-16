@@ -3,10 +3,10 @@
     "private": true,
     "version": "0.0.1",
     "dependencies": {
-      "http-proxy": "0.10.x",
-      "express": "3.x",
-      "imagemagick": "0.1.x",
-      "memcached": "0.2.x",
-      "cookie": "0.1.x"
+        "http-proxy": "0.10.x",
+        "express": "3.x",
+        "imagemagick": "0.1.x",
+        "memcached": "0.2.x",
+        "cookie": "0.1.x"
     }
 }
