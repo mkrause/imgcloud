@@ -1,0 +1,10 @@
+{
+    "name": "imagecloud-server",
+    "private": true,
+    "version": "0.0.1",
+    "dependencies": {
+        "http-proxy": "0.10.x",
+        "memcached": "0.2.x",
+        "cookie": "0.1.x"
+    }
+}
