@@ -84,7 +84,7 @@ module.exports = function ResourceManager() {
     };
 
     this.emit = function(event, request) {
-      console.log("Received " + event);
+        console.log("Received " + event);
         switch(event) {
             case "serverFailure":
                 console.log("ServerFailure for " + request);

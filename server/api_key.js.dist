@@ -1,0 +1,4 @@
+// Example file, copy to api_key.js and fill in your DigitalOcean API key
+module.exports = {
+    key: null
+};
