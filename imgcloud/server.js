@@ -26,13 +26,14 @@ app.use(express.methodOverride());
 app.use(function (err, req, res, next) {
     if (!err) return next();
 
-    res.render('error', {title: 'Error', error: err})
+    res.render('error', {title: 'Error', error: err});
 });
 
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', routes.index);
+app.get('/ping', routes.ping);
 app.post('/images/upload', images.upload);
 
 http.createServer(app).listen(app.get('port'), function () {
