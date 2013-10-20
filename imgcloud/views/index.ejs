@@ -1,40 +1,38 @@
-<div class="page-header">
-    <div class="row">
-        <div class="col-lg-6">
-            <h1>Submit Image</h1>
+<div class="row">
+    <div class="col-lg-6">
+        <h1>Submit Image</h1>
 
-            <p>Upload your image for further processing using the form below.</p>
+        <p>Upload your image for further processing using the form below.</p>
 
-            <form action="/images/upload" method="post" enctype="multipart/form-data" class="form-horizontal">
-                <fieldset>
+        <form action="/images/upload" method="post" enctype="multipart/form-data" class="form-horizontal">
+            <fieldset>
+                <div class="form-group">
                     <div class="form-group">
-                        <div class="form-group">
-                            <label for="select" class="col-lg-2 control-label">Processing</label>
-
-                            <div class="col-lg-10">
-                                <select class="form-control" id="select" multiple>
-                                    <option id="resize">Resize</option>
-                                    <option id="flip" selected>Flip</option>
-                                    <option id="noise" selected>Noise</option>
-                                    <option id="despeckle">Despeckle</option>
-                                    <option id="motionBlur" selected>Motion blur</option>
-                                </select>
-                            </div>
-                        </div>
-                        <label for="image" class="col-lg-2 control-label">Image</label>
+                        <label for="select" class="col-lg-2 control-label">Processing</label>
 
                         <div class="col-lg-10">
-                            <input type="file" class="form-control" name="image" id="image">
+                            <select class="form-control" id="select" name="processing" multiple>
+                                <option value="resize">Resize</option>
+                                <option value="flip" selected>Flip</option>
+                                <option value="noise" selected>Noise</option>
+                                <option value="despeckle">Despeckle</option>
+                                <option value="motionBlur" selected>Motion blur</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="col-lg-10 col-lg-offset-2">
-                            <button class="btn btn-default">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </div>
+                    <label for="image" class="col-lg-2 control-label">Image</label>
+
+                    <div class="col-lg-10">
+                        <input type="file" class="form-control" name="image" id="image">
                     </div>
-                </fieldset>
-            </form>
-        </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <button class="btn btn-default">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
     </div>
 </div>

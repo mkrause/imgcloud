@@ -2,7 +2,14 @@
  * POST image
  */
 exports.upload = function (req, res) {
-    processImage(req.files.image.path, ["motionBlur"], res);
+    var options = req.body.processing;
+    if(!(options instanceof Array)) {
+        options = [options];
+    }
+    if(req.files.image == 'undefined' || req.files.image.size == 0) {
+        throw new Error("No file provided");
+    }
+    processImage(req.files.image.path, options, res);
 };
 
 
@@ -25,7 +32,7 @@ var OPTIONS = {
     flip: function () {
         return this.flip();
     },
-    resize: function() {
+    resize: function () {
         return this.resize(640, 480);
     }
 }
@@ -41,15 +48,24 @@ function processImage(file, options, res) {
     });
 
     image.write(file + ".processed", function (err) {
-        if (err) throw err;
-        renderFile(file + ".processed", res);
+        if (err) {
+            renderError(res, err);
+        } else {
+            renderFile(file + ".processed", res);
+        }
     });
 }
 
 function renderFile(file, res) {
     fs.readFile(file, function (err, data) {
-        if (err) throw err;
-        res.write(data);
-        res.end();
+        if (err) {
+            renderError(res, err);
+        } else {
+            res.send(data);
+        }
     });
+}
+
+function renderError(res, err) {
+    res.render('error', {title: 'Error', error: err})
 }
