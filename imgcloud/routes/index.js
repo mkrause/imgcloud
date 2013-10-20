@@ -4,6 +4,5 @@
  */
 
 exports.index = function(req, res){
-    console.log(req.cookies);
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'imgCloud' });
 };
