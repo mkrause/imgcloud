@@ -30,7 +30,7 @@ module.exports = function ResourceManager() {
     
     this.markInstanceDead = function(instance) {
         // Remove instance
-        var index = this.instances.indexOf(instance);
+        var index = instances.indexOf(instance);
         if (index) {
             instances.splice(index);
         }
@@ -83,11 +83,12 @@ module.exports = function ResourceManager() {
         setInterval(function() {self.pollInstances()}, POLL_FREQUENCY);
     };
 
-    this.emit = function(event, request) {
+    this.emit = function(event, req, res) {
         console.log("Received " + event);
         switch(event) {
             case "serverFailure":
-                console.log("ServerFailure for " + request);
+//                this.markInstanceDead(request);
+                console.log("ServerFailure for " + res.getHeader('X-imgcloud-host'));
                 break;
         }
     };
