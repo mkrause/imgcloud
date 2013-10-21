@@ -2,6 +2,9 @@
  * POST image
  */
 exports.upload = function (req, res) {
+    res.set("X-imgcloud-load", os.loadavg());
+    res.cookie("imgcloud-host", req.headers.host);
+    
     var options = req.body.processing;
     if(!(options instanceof Array)) {
         options = [options];
