@@ -1,4 +1,5 @@
 var Instance = require('./instance');
+var http = require('http');
 
 module.exports = function ResourceManager() {
     // List of application instances
@@ -29,11 +30,16 @@ module.exports = function ResourceManager() {
     };
     
     this.markInstanceDead = function(instance) {
+        console.log("markInstanceDead: received %s, got %s instances", instance, instances.length);
         // Remove instance
-        var index = instances.indexOf(instance);
-        if (index) {
-            instances.splice(index);
+        var equals_array = instances.map(function(i) {
+            return i.equals(instance);
+        });
+        var index = equals_array.indexOf(true);
+        if (index != -1) {
+            instances.splice(index, 1);
         }
+        console.log("markInstanceDead: remaining instances: %s", instances);
     };
 
     this.getInstances = function() {
@@ -51,13 +57,13 @@ module.exports = function ResourceManager() {
         var req = http.request(options, function(res) {
             res.on('data', function(data) {
                 onSuccess(JSON.parse(data));
-            })
+            });
         });
         req.on('error', onError);
     };
 
-    this.checkAlive = function() {
-        //console.log("checkAlive: TODO");
+    this.checkAlive = function(instance, onSuccess, onError) {
+        this.pingInstance(instance, onSuccess, onError);
     };
     
     this.pollInstances = function() {
@@ -65,8 +71,10 @@ module.exports = function ResourceManager() {
         instances.forEach(function(instance) {
             var onSuccess = function(data) {
                 // should contain data.load (?)
+                console.log("pollInstances: %s is alive", instance)
             };
             var onError = function() {
+                console.log("pollInstances: %s died", instance)
                 self.markInstanceDead(instance);
             };
             self.checkAlive(instance, onSuccess, onError);
@@ -74,6 +82,7 @@ module.exports = function ResourceManager() {
     };
     
     this.bootstrap = function(initialInstances) {
+        instances = [];
         initialInstances.forEach(function(instance) {
             instances.push(new Instance(instance.host, instance.port, Math.round(Math.random()*100)));
         });
