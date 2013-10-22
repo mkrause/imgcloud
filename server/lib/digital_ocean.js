@@ -1,63 +1,59 @@
-var https = require('https');
+var http = require('q-io/http');
 var querystring = require('querystring');
-
-var apiConfig = require('../api_key');
 var Instance = require('./instance');
 
-module.exports = function DigitalOcean() {
-    function callApi(path, nodeback) {
-        var queryParams = apiConfig; //XXX should deep-clone this
+// Deep clone the given object (using a little hack)
+function clone(obj) {
+   return JSON.parse(JSON.stringify(obj));
+}
+
+module.exports = function DigitalOcean(apiConfig) {
+    if (!apiConfig) {
+        throw new Error("No API config provided");
+    }
+    
+    this.apiConfig = apiConfig;
+    
+    function callApi(path) {
+        var queryParams = clone(apiConfig);
+        
         queryParams.name = 'foo'; // TODO
         
         var options = {
-            hostname: "api.digitalocean",
+            hostname: "api.digitalocean.com",
             port: 443,
             path: path + "?" + querystring.stringify(queryParams),
             method: 'GET'
         };
         
-        var req = https.request(options, function(res) {
-            res.on('data', function(data) {
-                nodeback(null, JSON.parse(data));
-            })
-        });
-        
-        req.on('error', function(error) { nodeback(error); });
+        var qs = querystring.stringify(queryParams);
+        var url = "https://api.digitalocean.com" + path + "?" + qs;
+        return http.read(url).then(JSON.parse);
     }
     
-    // Create a new instance
-    this.allocate = function(nodeback) {
-        // Create a new droplet
-        callApi('/droplets/new', function(error, createdData) {
-            if (error) {
-                nodeback(error);
-            }
-            
-            var dropletId = createdData.droplet.id;
-            
-            // Get the address of the new droplet
-            callApi('/droplets/' + dropletId, function(error, dropletData) {
-                if (error) {
-                    nodeback(error);
-                }
-                
-                var ip = dropletData.droplet.ip_address;
-                var instance = new Instance(ip, 80);
-                nodeback(null, instance);
+    // Get information on the droplet with the given ID
+    this.droplet = function(id) {
+        return callApi('/droplets/' + id)
+            .then(function(response) {
+                return response.droplet;
             });
-        });
+    };
+    
+    // Create a new instance
+    this.allocate = function() {
+        return callApi('/droplets/new')
+            .then(function(response) {
+                return callApi('/droplets/' + response.droplet.id);
+            })
+            .then(function(response) {
+                var droplet = response.droplet;
+                return new Instance(droplet.id, droplet.ip_address, 80);
+            });
     };
     
     // Release the given instance
     this.destroy = function(instance, nodeback) {
         var dropletId = instance.id;
-        
-        // Create a new droplet
-        callApi('/droplets/' + dropletId + '/destroy', function(error, destroyedData) {
-            if (error) {
-                nodeback(error);
-            }
-            nodeback(null);
-        });
+        return callApi('/droplets/' + dropletId + '/destroy');
     };
 };
