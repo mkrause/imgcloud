@@ -61,10 +61,6 @@ module.exports = function ResourceManager() {
         req.on('error', onError);
     };
 
-    this.checkAlive = function(instance, onSuccess, onError) {
-        this.pingInstance(instance, onSuccess, onError);
-    };
-    
     this.pollInstances = function() {
         console.log("Polling...");
         instances.forEach(function(instance) {
@@ -76,7 +72,7 @@ module.exports = function ResourceManager() {
                 console.log("pollInstances: %s died", instance)
                 self.markInstanceDead(instance);
             };
-            self.checkAlive(instance, onSuccess, onError);
+            self.pingInstance(instance, onSuccess, onError);
         });
     };
     
