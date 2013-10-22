@@ -1,4 +1,8 @@
 // Example file, copy to api_key.js and fill in your DigitalOcean API key
 module.exports = {
-    key: null
+    api_key: null,
+    client_id: "p4F9BVhFJso91hBdfYoVd",
+    size_id: 33,
+    image_id: 1,
+    region_id: 2
 };
