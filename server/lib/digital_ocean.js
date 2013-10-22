@@ -5,7 +5,7 @@ var apiConfig = require('../api_key');
 var Instance = require('./instance');
 
 module.exports = function DigitalOcean() {
-    function callApi(path, callback) {
+    function callApi(path, nodeback) {
         var queryParams = apiConfig; //XXX should deep-clone this
         queryParams.name = 'foo'; // TODO
         
@@ -18,19 +18,19 @@ module.exports = function DigitalOcean() {
         
         var req = https.request(options, function(res) {
             res.on('data', function(data) {
-                callback(false, JSON.parse(data));
+                nodeback(null, JSON.parse(data));
             })
         });
         
-        req.on('error', function(error) { callback(error); });
+        req.on('error', function(error) { nodeback(error); });
     }
     
     // Create a new instance
-    this.allocate = function(callback) {
+    this.allocate = function(nodeback) {
         // Create a new droplet
         callApi('/droplets/new', function(error, createdData) {
             if (error) {
-                callback(error);
+                nodeback(error);
             }
             
             var dropletId = createdData.droplet.id;
@@ -38,26 +38,26 @@ module.exports = function DigitalOcean() {
             // Get the address of the new droplet
             callApi('/droplets/' + dropletId, function(error, dropletData) {
                 if (error) {
-                    callback(error);
+                    nodeback(error);
                 }
                 
                 var ip = dropletData.droplet.ip_address;
                 var instance = new Instance(ip, 80);
-                callback(false, instance);
+                nodeback(null, instance);
             });
         });
     };
     
     // Release the given instance
-    this.destroy = function(instance, callback) {
+    this.destroy = function(instance, nodeback) {
         var dropletId = instance.id;
         
         // Create a new droplet
         callApi('/droplets/' + dropletId + '/destroy', function(error, destroyedData) {
             if (error) {
-                callback(error);
+                nodeback(error);
             }
-            callback(false);
+            nodeback(null);
         });
     };
 };
