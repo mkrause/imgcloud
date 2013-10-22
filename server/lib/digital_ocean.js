@@ -1,10 +1,12 @@
 var https = require('https');
 var querystring = require('querystring');
+
 var apiConfig = require('../api_key');
+var Instance = require('./instance');
 
 module.exports = function DigitalOcean() {
-    function callApi(path, onSuccess, onError) {
-        var queryParams = apiConfig;
+    function callApi(path, callback) {
+        var queryParams = apiConfig; //XXX should deep-clone this
         queryParams.name = 'foo'; // TODO
         
         var options = {
@@ -16,15 +18,46 @@ module.exports = function DigitalOcean() {
         
         var req = https.request(options, function(res) {
             res.on('data', function(data) {
-                onSuccess(JSON.parse(data));
+                callback(false, JSON.parse(data));
             })
         });
-        req.on('error', onError);
+        
+        req.on('error', function(error) { callback(error); });
     }
     
-    this.allocate = function() {
-        callApi('/droplets/new', function(response) {
+    // Create a new instance
+    this.allocate = function(callback) {
+        // Create a new droplet
+        callApi('/droplets/new', function(error, createdData) {
+            if (error) {
+                callback(error);
+            }
             
+            var dropletId = createdData.droplet.id;
+            
+            // Get the address of the new droplet
+            callApi('/droplets/' + dropletId, function(error, dropletData) {
+                if (error) {
+                    callback(error);
+                }
+                
+                var ip = dropletData.droplet.ip_address;
+                var instance = new Instance(ip, 80);
+                callback(false, instance);
+            });
+        });
+    };
+    
+    // Release the given instance
+    this.destroy = function(instance, callback) {
+        var dropletId = instance.id;
+        
+        // Create a new droplet
+        callApi('/droplets/' + dropletId + '/destroy', function(error, destroyedData) {
+            if (error) {
+                callback(error);
+            }
+            callback(false);
         });
     };
 };

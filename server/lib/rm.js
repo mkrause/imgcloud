@@ -1,7 +1,10 @@
 var Instance = require('./instance');
+var DigitalOcean = require('./digital_ocean');
 var http = require('http');
 
 module.exports = function ResourceManager() {
+    var digitalOcean = new DigitalOcean();
+    
     // List of application instances
     var instances = [];
 
@@ -14,8 +17,11 @@ module.exports = function ResourceManager() {
     var POLL_FREQUENCY = 5000;
     
     this.allocateInstance = function() {
-        //var droplet = digitalOcean.createDroplet();
-        //droplet.host
+        /*
+        digitalOcean.allocate(function(error, instance) {
+            
+        });
+        */
         
         var port = availablePort;
         http.createServer(function (req, res) {
@@ -24,8 +30,10 @@ module.exports = function ResourceManager() {
             res.end();
         }).listen(port);
         
-        var instance = new Instance('localhost', port);
+        var id = port; // Since the port should be unique, we can use it as an ID as well
+        var instance = new Instance(id, 'localhost', port);
         availablePort += 1;
+        
         return instance;
     };
     
