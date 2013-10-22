@@ -30,7 +30,7 @@ module.exports = function ResourceManager() {
     };
     
     this.markInstanceDead = function(instance) {
-        console.log("markInstanceDead: received %s, got %s instances", instance, instances.length);
+        console.log("markInstanceDead: marking %s", instance);
         // Remove instance
         var equals_array = instances.map(function(i) {
             return i.equals(instance);
@@ -39,7 +39,6 @@ module.exports = function ResourceManager() {
         if (index != -1) {
             instances.splice(index, 1);
         }
-        console.log("markInstanceDead: remaining instances: %s", instances);
     };
 
     this.getInstances = function() {
