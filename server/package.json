@@ -5,6 +5,8 @@
     "dependencies": {
         "http-proxy": "0.10.x",
         "memcached": "0.2.x",
-        "cookie": "0.1.x"
+        "cookie": "0.1.x",
+        "mocha": "1.x.x",
+        "should": "2.x.x"
     }
 }
