@@ -100,15 +100,15 @@ module.exports = function ResourceManager() {
     this.getInstances = function() {
         return this.instances;
     };
-
-    this.getInstance = function(inst) {
+    
+    this.getInstance = function(id) {
         var instance = false;
-        this.instances.forEach(function(i) {
-            if(i.equals(inst)) {
-                instance = i;
-                return;
+        this.instances.forEach(function(inst) {
+            if (inst.id == id) {
+                instance = inst;
             }
         }, this);
+        
         return instance;
     };
     
