@@ -3,7 +3,7 @@ var DigitalOcean = require('./digital_ocean');
 var http = require('http');
 
 module.exports = function ResourceManager() {
-    var digitalOcean = new DigitalOcean();
+    var digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
     
     // List of application instances
     var instances = [];
@@ -60,8 +60,9 @@ module.exports = function ResourceManager() {
             path: '/ping',
             method: 'GET'
         };
-        
+
         var req = http.request(options, function(res) {
+            console.log(res);
             res.on('data', function(data) {
                 onSuccess(JSON.parse(data));
             });
@@ -70,14 +71,14 @@ module.exports = function ResourceManager() {
     };
 
     this.pollInstances = function() {
-        console.log("Polling...");
+        console.log("Polling... %s", instances.length);
         instances.forEach(function(instance) {
             var onSuccess = function(data) {
                 // should contain data.load (?)
-                console.log("pollInstances: %s is alive", instance)
+                console.log("pollInstances: %s is alive", instance);
             };
             var onError = function() {
-                console.log("pollInstances: %s died", instance)
+                console.log("pollInstances: %s died", instance);
                 self.markInstanceDead(instance);
             };
             self.pingInstance(instance, onSuccess, onError);
@@ -87,7 +88,7 @@ module.exports = function ResourceManager() {
     this.bootstrap = function(initialInstances) {
         instances = [];
         initialInstances.forEach(function(instance) {
-            instances.push(new Instance(instance.host, instance.port, Math.round(Math.random()*100)));
+            instances.push(new Instance(null, instance.host, instance.port, Math.round(Math.random()*100)));
         });
         console.log("Found " + instances.length + " bootstrap instances");
 
