@@ -105,9 +105,10 @@ module.exports = function ResourceManager() {
                 break;
 
             case "requestEnd":
-                var host = res.headers['x-imgcloud-host'].split(":");
-                console.log("requestEnd, setting load to %s", res.headers['x-imgcloud-load']);
-                this.setInstanceLoad(host[0], host[1], res.headers['x-imgcloud-load'])
+//                var host = res.headers['x-imgcloud-host'].split(":");
+//                console.log("requestEnd, setting load to %s", res.headers['x-imgcloud-load']);
+//                this.setInstanceLoad(host[0], host[1], res.headers['x-imgcloud-load']);
+                // track processing time
                 break;
         }
     };

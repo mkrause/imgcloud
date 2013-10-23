@@ -16,6 +16,7 @@ var server = httpProxy.createServer(function(req, res, proxy) {
         console.log("Proxied to " + instance.toString());
 
         res.setHeader('x-imgcloud-host', instance.host + ":" + instance.port);
+        res.setHeader('x-imgcloud-start', +new Date);
 
         proxy.proxyRequest(req, res, {
             host: instance.host,
@@ -31,6 +32,8 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 }).listen(8000);
 
 server.proxy.on('end', function(err, req, res) {
+    console.log("PROXY END")
+    console.log(requests[req]);
     rm.emit("requestEnd", req, res);
 });
 
