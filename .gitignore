@@ -1,5 +1,5 @@
 imgcloud/node_modules/
 server/node_modules/
 
+server/config.js
 server/digital_ocean_api_key.js
-

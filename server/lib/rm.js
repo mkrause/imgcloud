@@ -54,20 +54,6 @@ module.exports = function ResourceManager() {
     this.availablePort = 8001;
     
     this.allocateInstance = function() {
-        /*
-        //XXX local allocation
-        var port = availablePort;
-        http.createServer(function (req, res) {
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.write('yay (' + port + ')');
-            res.end();
-        }).listen(port);
-
-        var id = port; // Since the port should be unique, we can use it as an ID as well
-        var instance = new Instance(id, 'localhost', port);
-        availablePort += 1;
-        */
-        
         var id = this.availableId;
         console.log("Allocating instance with ID: " + id);
         
@@ -110,6 +96,7 @@ module.exports = function ResourceManager() {
         this.instances.forEach(function(inst) {
             if (inst.id == id) {
                 instance = inst;
+                return false; // Break
             }
         }, this);
         
@@ -118,11 +105,6 @@ module.exports = function ResourceManager() {
     
     this.pingInstance = function(instance) {
         return http.request("http://" + instance.host + ":" + instance.port + "/ping");
-    };
-    
-    this.setInstanceLoad = function(host, port, load) {
-        var instance = this.getInstance({host: host, port: port})
-        instance.load = load.split(",")[0];
     };
     
     this.recordInstanceLoad = function(instance) {
@@ -174,7 +156,7 @@ module.exports = function ResourceManager() {
         if (systemLoad > this.ALLOCATION_THRESHOLD && numInstances < this.MAX_INSTANCES) {
             this.allocateInstance();
         } else if (systemLoad < this.DEALLOCATION_THRESHOLD && numInstances > this.MIN_INSTANCES) {
-            this.deallocateInstance();
+            this.deallocateInstance(this.instances[0]); // Randomly kill some instance
         }
     };
     

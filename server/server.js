@@ -5,19 +5,19 @@ var resolve = require('./lib/resolve.js');
 
 // Initialize the resource manager
 var rm = new ResourceManager();
-var initialInstances = require('./instances.js');
+var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
 
 // Start proxy server
 var server = httpProxy.createServer(function(req, res, proxy) {
     try {
         var instance = resolve(req, rm);
-
+        
         console.log("Proxied to " + instance);
-
+        
         req.headers["x-imgcloud-host"] = instance.id;
         req.headers["x-imgcloud-start-lb"] = +new Date;
-
+        
         proxy.proxyRequest(req, res, {
             host: instance.host,
             port: instance.port
