@@ -1,6 +1,6 @@
-var Instance = require('./instance');
-var DigitalOcean = require('./digital_ocean');
 var http = require('q-io/http');
+var Instance = require('./instance.js');
+var DigitalOcean = require('./digital_ocean.js');
 
 module.exports = function ResourceManager() {
     var digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
@@ -18,9 +18,7 @@ module.exports = function ResourceManager() {
     
     this.allocateInstance = function() {
         /*
-        digitalOcean.allocate(function(error, instance) {
-            
-        });
+        digitalOcean.allocate();
         */
         
         var port = availablePort;
