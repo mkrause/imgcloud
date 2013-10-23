@@ -3,24 +3,23 @@ var Instance = require('./instance.js');
 var DigitalOcean = require('./digital_ocean.js');
 
 module.exports = function ResourceManager() {
-    var digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
-
-    // List of application instances
-    var instances = [];
-
     var self = this;
-
-    // Some port we know to be available (useful for creating local test instances)
-    var availablePort = 8001;
-
+    
+    this.digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
+    
+    // List of application instances
+    this.instances = [];
+    
+    this.availableId = 1;
+    
+    // Some port we know to be available (useful for creating local test this.instances)
+    this.availablePort = 8001;
+    
     // Number of milliseconds between each uptime check
-    var POLL_FREQUENCY = 5000;
-
+    this.POLL_FREQUENCY = 5000;
+    
     this.allocateInstance = function() {
         /*
-        digitalOcean.allocate();
-        */
-
         var port = availablePort;
         http.createServer(function (req, res) {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -31,22 +30,32 @@ module.exports = function ResourceManager() {
         var id = port; // Since the port should be unique, we can use it as an ID as well
         var instance = new Instance(id, 'localhost', port);
         availablePort += 1;
-
-        return instance;
+        */
+        
+        var id = this.availableId;
+        console.log("Allocating instance with ID: " + id);
+        
+        this.availableId += 1;
+        return this.digitalOcean.allocate(id);
+    };
+    
+    this.deallocateInstance = function(instance) {
+        console.log("Deallocating instance: " + instance);
+        return this.digitalOcean.deallocate(instance);
     };
 
     this.markInstanceDead = function(instance_obj) {
         console.log("markInstanceDead: marking %s", instance_obj);
         // Remove instance
         var instance = this.getInstance(instance_obj);
-        var index = instances.indexOf(instance);
+        var index = this.instances.indexOf(instance);
         if (index != -1) {
-            instances.splice(index, 1);
+            this.instances.splice(index, 1);
         }
     };
 
     this.getInstances = function() {
-        return instances;
+        return this.instances;
     };
 
     this.getInstance = function(inst) {
@@ -59,23 +68,23 @@ module.exports = function ResourceManager() {
         });
         return instance;
     }
-
-    this.pingInstance = function(instance, onSuccess, onError) {
-        http.request("http://" + instance.host + ":" + instance.port + "/ping").then(onSuccess).fail(onError);
+    
+    this.pingInstance = function(instance) {
+        return http.read("http://" + instance.host + ":" + instance.port + "/ping");
     };
-
+    
     this.pollInstances = function() {
-        console.log("Polling... %s", instances.length);
-        instances.forEach(function(instance) {
-            var onSuccess = function(data) {
-                instance.load = data.headers['x-imgcloud-load'].split(',')[0];
-                console.log("pollInstances: %s is alive", instance);
-            };
-            var onError = function() {
-                console.log("pollInstances: %s died", instance);
-                self.markInstanceDead(instance);
-            };
-            self.pingInstance(instance, onSuccess, onError);
+        console.log("Polling... %s", this.instances.length);
+        this.instances.forEach(function(instance) {
+            self.pingInstance(instance)
+                .then(function() {
+                    instance.load = data.headers['x-imgcloud-load'].split(',')[0];
+                    console.log("pollInstances: %s is alive", instance);
+                })
+                .fail(function() {
+                    console.log("pollInstances: %s died", instance);
+                    self.markInstanceDead(instance);
+                });
         });
     };
 
@@ -85,16 +94,19 @@ module.exports = function ResourceManager() {
     }
 
     this.bootstrap = function(initialInstances) {
-        instances = [];
-        initialInstances.forEach(function(instance) {
-            instances.push(new Instance(null, instance.host, instance.port, Math.round(Math.random()*100)));
+        this.instances = [];
+        initialInstances.forEach(function(instInfo) {
+            var id = this.availableId++;
+            var load = Math.round(Math.random() * 100);
+            var inst = new Instance(id, instInfo.host, instInfo.port, load);
+            this.instances.push(inst);
         });
-        console.log("Found " + instances.length + " bootstrap instances");
-
+        console.log("Found " + this.instances.length + " bootstrap instances");
+        
         // Start polling
-        setInterval(function() {self.pollInstances()}, POLL_FREQUENCY);
+        setInterval(this.pollInstances, this.POLL_FREQUENCY);
     };
-
+    
     this.emit = function(event, req, res) {
         console.log("Received " + event);
         switch(event) {

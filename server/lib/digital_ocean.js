@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var http = require('q-io/http');
 var querystring = require('querystring');
 var Instance = require('./instance');
@@ -14,10 +15,12 @@ module.exports = function DigitalOcean(apiConfig) {
     
     this.apiConfig = apiConfig;
     
-    function callApi(path) {
-        var queryParams = clone(apiConfig);
-        
-        queryParams.name = 'foo'; // TODO
+    function callApi(path, params) {
+        var params = params || {};
+        var queryParams = _.defaults(params, {
+            api_key: apiConfig.apiKey,
+            client_id: apiConfig.clientId
+        });
         
         var options = {
             hostname: "api.digitalocean.com",
@@ -48,8 +51,11 @@ module.exports = function DigitalOcean(apiConfig) {
     };
     
     // Create a new instance
-    this.allocate = function() {
-        return callApi('/droplets/new')
+    this.allocate = function(id) {
+        var params = clone(this.apiConfig.dropletParams);
+        params.name = 'cc-instance' + id;
+        
+        return callApi('/droplets/new', params)
             .then(function(response) {
                 return callApi('/droplets/' + response.droplet.id);
             })
@@ -60,7 +66,7 @@ module.exports = function DigitalOcean(apiConfig) {
     };
     
     // Release the given instance
-    this.destroy = function(instance) {
+    this.deallocate = function(instance) {
         var dropletId = instance.id;
         return callApi('/droplets/' + dropletId + '/destroy');
     };
