@@ -49,7 +49,7 @@ http.createServer(app).listen(app.get('port'), function () {
 
 var os = require('os');
 function setSystemLoad(req, res, next) {
-    res.set("x-imgcloud-load", os.loadavg().join(","));
+    res.set("x-imgcloud-osload", os.loadavg()[0]);
     res.set("x-imgcloud-host", req.headers['x-imgcloud-host']);
     res.set("x-imgcloud-start-lb", req.headers['x-imgcloud-start-lb']);
     res.set("x-imgcloud-start-app", +new Date);

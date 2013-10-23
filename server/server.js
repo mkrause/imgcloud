@@ -8,13 +8,23 @@ var rm = new ResourceManager();
 var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
 
+var requests = {};
+
 // Start proxy server
 var server = httpProxy.createServer(function(req, res, proxy) {
     try {
         var instance = resolve(req, rm);
-        
-        console.log("Proxied to " + instance);
-        
+
+        if(req.url == "/images/upload") {
+            if(!requests[instance.id]) {
+                requests[instance.id] = 0;
+            }
+            requests[instance.id]++;
+            instance.recordLoad(requests[instance.id]);
+
+            console.log("Proxied to %s, has %s open connections", instance, requests[instance.id]);
+        }
+
         req.headers["x-imgcloud-host"] = instance.id;
         req.headers["x-imgcloud-start-lb"] = +new Date;
         
@@ -32,6 +42,10 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 }).listen(8000);
 
 server.proxy.on('end', function(req, res) {
+    if(req.url == "/images/upload") {
+        requests[1*req.headers['x-imgcloud-host']]--;
+    }
+    rm.
     rm.emit("requestEnd", req, res);
 });
 

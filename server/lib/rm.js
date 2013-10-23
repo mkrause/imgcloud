@@ -125,7 +125,7 @@ module.exports = function ResourceManager() {
         this.instances.forEach(function(instance) {
             this.pingInstance(instance)
                 .then(function(data) {
-                    instance.load = Number(data.headers['x-imgcloud-load'].split(',')[0]);
+                    instance.load = Number(data.headers['x-imgcloud-osload'].split(',')[0]);
                     console.log("pollInstances: %s is alive", instance);
                     
                     // Save the load for this instance in its history
@@ -188,29 +188,25 @@ module.exports = function ResourceManager() {
         var curTime = new Date;
         var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
         // Store the LB and app response times
-        this.DB.rpush("imgcloud-lb-response-" + keyBit, 1*headers['x-imgcloud-start-app'] - 1*headers['x-imgcloud-start-lb']);
-        this.DB.rpush("imgcloud-app-response-" + keyBit, +curTime - 1*headers['x-imgcloud-start-app']);
+        this.DB.rpush("imgcloud-response-" + keyBit, curTime -  1*headers['x-imgcloud-start-lb']);
 
         // Store the instance load
-        this.DB.rpush("imgcloud-load-" + keyBit, res.getHeader('x-imgcloud-load').split(",")[0]);
+        this.DB.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);
     };
     
     // Emit an event
     this.emit = function(eventName, req, res) {
         console.log("Received " + eventName);
+        var instanceId = req.headers['x-imgcloud-host'];
+        var instance = this.getInstance(instanceId);
+
         switch (eventName) {
             case "serverFailure":
-                var instanceId = req.headers['x-imgcloud-host'];
                 console.log("ServerFailure for " + instanceId);
-                var instance = this.getInstance(instanceId);
                 this.markInstanceDead(instance);
                 break;
 
             case "requestEnd":
-                var instanceId = req.headers['x-imgcloud-host'];
-                var instance = this.getInstance(instanceId);
-                instance.load = res.getHeader('x-imgcloud-load').split(",")[0];
-
                 if(req.url == "/images/upload") {
                     this.saveRequestStats(instanceId, res);
                 }
