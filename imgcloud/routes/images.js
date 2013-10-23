@@ -10,7 +10,7 @@ exports.upload = function (req, res) {
     if(req.files.image == 'undefined' || req.files.image.size == 0) {
         throw new Error("No file provided");
     }
-    processImage(req.files.image.path, options, res);
+    processImage(req.files.image, options, res);
 };
 
 
@@ -39,7 +39,7 @@ var OPTIONS = {
 }
 
 function processImage(file, options, res) {
-    var image = engine(file);
+    var image = engine(file.path);
     image.autoOrient();
 
     options.forEach(function (option) {
@@ -48,20 +48,21 @@ function processImage(file, options, res) {
         }
     });
 
-    image.write(file + ".processed", function (err) {
+    image.write(file.path + ".processed", function (err) {
         if (err) {
             renderError(res, err);
         } else {
-            renderFile(file + ".processed", res);
+            renderFile(file, res);
         }
     });
 }
 
 function renderFile(file, res) {
-    fs.readFile(file, function (err, data) {
+    fs.readFile(file.path + ".processed", function (err, data) {
         if (err) {
             renderError(res, err);
         } else {
+            res.setHeader("Content-Type", file.type);
             res.send(data);
         }
     });
