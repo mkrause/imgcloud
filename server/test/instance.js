@@ -6,7 +6,7 @@ var instances = [
 
 var should = require('should');
 describe('Instance', function(){
-    var instance = new Instance(instances[0].host, instances[0].port);
+    var instance = new Instance(null, instances[0].host, instances[0].port);
 
     describe('#equals()', function(){
         it('should be equal to itself', function(){
