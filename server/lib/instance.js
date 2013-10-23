@@ -18,7 +18,7 @@ module.exports = function Instance(id, host, port) {
     this.id = id;
     this.host = host;
     this.port = port;
-
+    
     this.LOAD_HISTORY_WINDOW_SIZE = 30;//parseInt(this.PROVISION_FREQUENCY / this.POLL_FREQUENCY, 10);
     this.loadHistory = [];
     

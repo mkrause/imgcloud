@@ -8,16 +8,18 @@ var rm = new ResourceManager();
 var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
 
+// Number of requests per instance (which we can use to indicate the load of an instance)
 var requests = {};
 
 // Start proxy server
 var server = httpProxy.createServer(function(req, res, proxy) {
     try {
+        // Find some instance to which we can pass this request
         var instance = resolve(req, rm);
-
+        
         // Track the number of pending requests per instance
-        if(req.url == "/images/upload") {
-            if(!requests[instance.id]) {
+        if (req.url == "/images/upload") {
+            if (!requests[instance.id]) {
                 requests[instance.id] = 0;
             }
             requests[instance.id]++;
@@ -44,8 +46,8 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 
 server.proxy.on('end', function(req, res) {
     // Lower (and update) the num of open connections for the instance
-    if(req.url == "/images/upload") {
-        var instanceId = req.headers['x-imgcloud-host'];
+    if (req.url == "/images/upload") {
+        var instanceId = parseInt(req.headers['x-imgcloud-host'], 10);
         requests[instanceId]--;
         rm.getInstance(req.headers["x-"]).recordLoad(requests[instanceId]);
     }
