@@ -1,6 +1,7 @@
 var http = require('q-io/http');
 var Instance = require('./instance.js');
 var DigitalOcean = require('./digital_ocean.js');
+var redis = require('then-redis');
 
 // Get the average of a numerical array
 function average(arr) {
@@ -20,6 +21,9 @@ function average(arr) {
 
 module.exports = function ResourceManager() {
     var self = this;
+
+    // Redis database used for storage
+    this.DB = redis.createClient();
     
     // Number of milliseconds between each uptime check
     this.POLL_FREQUENCY = 5 * 1000;
@@ -188,12 +192,25 @@ module.exports = function ResourceManager() {
             this.availableId = Math.max(this.availableId, instInfo.id + 1);
         }, this);
         console.log("Found " + this.instances.length + " bootstrap instances");
-        
+
         // Start polling
-        setInterval(this.pollInstances.bind(this), this.POLL_FREQUENCY);
-        
-        // Check the load at regular intervals, and provision accordingly
-        setInterval(this.provision.bind(this), this.PROVISION_FREQUENCY);
+        if(process.env.POLL != 0) {
+            setInterval(this.pollInstances.bind(this), this.POLL_FREQUENCY);
+
+            // Check the load at regular intervals, and provision accordingly
+            setInterval(this.provision.bind(this), this.PROVISION_FREQUENCY);
+        }
+    };
+
+    this.saveRequestStats = function(instanceId, res) {
+        var curTime = new Date;
+        var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
+        // Store the LB and app response times
+        this.DB.rpush("imgcloud-lb-response-" + keyBit, 1*headers['x-imgcloud-start-app'] - 1*headers['x-imgcloud-start-lb']);
+        this.DB.rpush("imgcloud-app-response-" + keyBit, +curTime - 1*headers['x-imgcloud-start-app']);
+
+        // Store the instance load
+        this.DB.rpush("imgcloud-load-" + keyBit, res.getHeader('x-imgcloud-load').split(",")[0]);
     };
     
     // Emit an event
@@ -208,10 +225,13 @@ module.exports = function ResourceManager() {
                 break;
 
             case "requestEnd":
-                var instanceId = res.headers['x-imgcloud-host'];
+                var instanceId = req.headers['x-imgcloud-host'];
                 var instance = this.getInstance(instanceId);
-                instance.load = res.headers['x-imgcloud-load'];
-                // track processing time
+                instance.load = res.getHeader('x-imgcloud-load').split(",")[0];
+
+                if(req.url == "/images/upload") {
+                    this.saveRequestStats(instanceId, res);
+                }
                 break;
         }
     };

@@ -31,7 +31,7 @@ var server = httpProxy.createServer(function(req, res, proxy) {
     }
 }).listen(8000);
 
-server.proxy.on('end', function(err, req, res) {
+server.proxy.on('end', function(req, res) {
     rm.emit("requestEnd", req, res);
 });
 

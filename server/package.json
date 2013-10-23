@@ -10,6 +10,7 @@
         "cookie": "0.1.x",
         "mocha": "1.x.x",
         "should": "2.x.x",
-        "underscore": "1.5.x"
+        "underscore": "1.5.x",
+        "then-redis": "0.3.x"
     }
 }
