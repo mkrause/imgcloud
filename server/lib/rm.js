@@ -63,7 +63,7 @@ module.exports = function ResourceManager() {
 
     this.getInstance = function(inst) {
         var instance = false;
-        instances.forEach(function(i) {
+        this.instances.forEach(function(i) {
             if(i.equals(inst)) {
                 instance = i;
                 return;
