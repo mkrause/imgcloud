@@ -12,12 +12,12 @@ rm.bootstrap(initialInstances);
 var server = httpProxy.createServer(function(req, res, proxy) {
     try {
         var instance = resolve(req, rm);
-
-        console.log("Proxied to " + instance.toString());
-
+        
+        console.log("Proxied to " + instance);
+        
         res.setHeader('x-imgcloud-host', instance.host + ":" + instance.port);
         res.setHeader('x-imgcloud-start', +new Date);
-
+        
         proxy.proxyRequest(req, res, {
             host: instance.host,
             port: instance.port

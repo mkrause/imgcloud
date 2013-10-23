@@ -19,7 +19,7 @@ module.exports = function resolve(req, rm) {
         console.log({host: previousHost[0], port: previousHost[1]});
         instance = rm.getInstance({host: previousHost[0], port: previousHost[1]});
         console.log("Redirecting to %s again", instance);
-        if(instance.load > AB_THRESHOLD) {
+        if (instance.load > AB_THRESHOLD) {
             instance = null;
         }
     }
@@ -29,4 +29,4 @@ module.exports = function resolve(req, rm) {
         instance = balancer.balance(rm);
     }
     return instance;
-}
+};

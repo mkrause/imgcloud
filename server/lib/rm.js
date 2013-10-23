@@ -5,11 +5,13 @@ var DigitalOcean = require('./digital_ocean.js');
 module.exports = function ResourceManager() {
     var self = this;
     
+    // Client for our IaaS provider (DigitalOcean)
     this.digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
     
     // List of application instances
     this.instances = [];
     
+    // Some ID that is guaranteed to be currently available
     this.availableId = 1;
     
     // Some port we know to be available (useful for creating local test this.instances)
@@ -20,6 +22,7 @@ module.exports = function ResourceManager() {
     
     this.allocateInstance = function() {
         /*
+        //XXX local allocation
         var port = availablePort;
         http.createServer(function (req, res) {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -65,51 +68,57 @@ module.exports = function ResourceManager() {
                 instance = i;
                 return;
             }
-        });
+        }, this);
         return instance;
-    }
+    };
+    
+    this.setInstanceLoad = function(host, port, load) {
+        var instance = this.getInstance({host: host, port: port})
+        instance.load = load.split(",")[0];
+    };
     
     this.pingInstance = function(instance) {
-        return http.read("http://" + instance.host + ":" + instance.port + "/ping");
+        return http.request("http://" + instance.host + ":" + instance.port + "/ping");
     };
     
     this.pollInstances = function() {
-        console.log("Polling... %s", this.instances.length);
+        console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
-            self.pingInstance(instance)
-                .then(function() {
+            this.pingInstance(instance)
+                .then(function(data) {
                     instance.load = data.headers['x-imgcloud-load'].split(',')[0];
                     console.log("pollInstances: %s is alive", instance);
                 })
                 .fail(function() {
                     console.log("pollInstances: %s died", instance);
-                    self.markInstanceDead(instance);
+                    this.markInstanceDead(instance);
                 });
-        });
+        }, this);
     };
-
-    this.setInstanceLoad = function(host, port, load) {
-        var instance = this.getInstance({host: host, port: port})
-        instance.load = load.split(",")[0];
-    }
-
+    
+    // Bootstrap the resource manager, with an optional set of initial instances
     this.bootstrap = function(initialInstances) {
+        initialInstances = initialInstances || [];
+        
         this.instances = [];
         initialInstances.forEach(function(instInfo) {
-            var id = this.availableId++;
             var load = Math.round(Math.random() * 100);
-            var inst = new Instance(id, instInfo.host, instInfo.port, load);
+            var inst = new Instance(instInfo.id, instInfo.host, instInfo.port, load);
             this.instances.push(inst);
-        });
+            
+            // Make sure our availableId is higher
+            this.availableId = Math.max(this.availableId, instInfo.id + 1);
+        }, this);
         console.log("Found " + this.instances.length + " bootstrap instances");
         
         // Start polling
-        setInterval(this.pollInstances, this.POLL_FREQUENCY);
+        setInterval(this.pollInstances.bind(this), this.POLL_FREQUENCY);
     };
     
-    this.emit = function(event, req, res) {
-        console.log("Received " + event);
-        switch(event) {
+    // Emit an event
+    this.emit = function(eventName, req, res) {
+        console.log("Received " + eventName);
+        switch (eventName) {
             case "serverFailure":
                 var host = res.getHeader('X-imgcloud-host').split(":");
                 this.markInstanceDead(new Instance(null, host[0], host[1]));

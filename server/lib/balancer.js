@@ -1,3 +1,4 @@
+
 exports.balance = function(rm) {
     var sorted_instances = rm.getInstances().sort(function(a, b) {
 //        return a.load - b.load;
@@ -5,4 +6,4 @@ exports.balance = function(rm) {
     });
 
     return sorted_instances[0];
-}
+};
