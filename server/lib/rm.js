@@ -100,7 +100,8 @@ module.exports = function ResourceManager() {
         console.log("Received " + event);
         switch(event) {
             case "serverFailure":
-//                this.markInstanceDead(request);
+                var host = res.getHeader('X-imgcloud-host').split(":");
+                this.markInstanceDead(new Instance(null, host[0], host[1]));
                 console.log("ServerFailure for " + res.getHeader('X-imgcloud-host'));
                 break;
         }
