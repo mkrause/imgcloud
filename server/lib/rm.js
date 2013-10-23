@@ -120,15 +120,16 @@ module.exports = function ResourceManager() {
         console.log("Received " + eventName);
         switch (eventName) {
             case "serverFailure":
-                var host = res.getHeader('X-imgcloud-host').split(":");
-                this.markInstanceDead(new Instance(null, host[0], host[1]));
-                console.log("ServerFailure for " + res.getHeader('X-imgcloud-host'));
+                var instanceId = req.headers['x-imgcloud-host'];
+                console.log("ServerFailure for " + instanceId);
+                var instance = this.getInstance(instanceId);
+                this.markInstanceDead(instance);
                 break;
 
             case "requestEnd":
-//                var host = res.headers['x-imgcloud-host'].split(":");
-//                console.log("requestEnd, setting load to %s", res.headers['x-imgcloud-load']);
-//                this.setInstanceLoad(host[0], host[1], res.headers['x-imgcloud-load']);
+                var instanceId = res.headers['x-imgcloud-host'];
+                var instance = this.getInstance(instanceId);
+                instance.load = res.headers['x-imgcloud-load'];
                 // track processing time
                 break;
         }

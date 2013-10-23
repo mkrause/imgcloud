@@ -12,12 +12,12 @@ rm.bootstrap(initialInstances);
 var server = httpProxy.createServer(function(req, res, proxy) {
     try {
         var instance = resolve(req, rm);
-        
+
         console.log("Proxied to " + instance);
-        
-        res.setHeader('x-imgcloud-host', instance.host + ":" + instance.port);
-        res.setHeader('x-imgcloud-start', +new Date);
-        
+
+        req.headers["x-imgcloud-host"] = instance.id;
+        req.headers["x-imgcloud-start-lb"] = +new Date;
+
         proxy.proxyRequest(req, res, {
             host: instance.host,
             port: instance.port
@@ -32,17 +32,15 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 }).listen(8000);
 
 server.proxy.on('end', function(err, req, res) {
-    console.log("PROXY END")
-    console.log(requests[req]);
     rm.emit("requestEnd", req, res);
 });
 
 server.proxy.on('proxyError', function(err, req, res) {
+    console.log("proxyError");
+
     res.writeHead(500, {
         "Content-Type": "text/plain"
     });
-
-    res.end("Proxy error while redirecting request to " + res.getHeader('x-imgcloud-host') +"\n");
-
+    res.end("Proxy error while redirecting request to " + req.headers['x-imgcloud-host'] +"\n");
     rm.emit('serverFailure', req, res);
 });
