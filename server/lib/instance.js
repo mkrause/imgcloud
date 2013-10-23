@@ -6,8 +6,8 @@ module.exports = function Instance(id, host, port, load) {
 
     this.toString = function() {
         return "["
-            + this.id + ":"
-            + this.host + ", "
+            + this.id + ", "
+            + this.host + ":"
             + this.port + ", "
             + this.load
             + "]";
