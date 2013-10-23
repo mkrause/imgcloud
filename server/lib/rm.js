@@ -1,6 +1,8 @@
 var http = require('q-io/http');
+var config = require('../config.js');
 var Instance = require('./instance.js');
 var DigitalOcean = require('./digital_ocean.js');
+var DigitalOceanFake = require('./digital_ocean_fake.js');
 var redis = require('then-redis');
 
 // Get the average of a numerical array
@@ -40,7 +42,11 @@ module.exports = function ResourceManager() {
     this.DEALLOCATION_THRESHOLD = 0.50;
     
     // Client for our IaaS provider (DigitalOcean)
-    this.digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
+    if (config.useDigitalOcean) {
+        this.digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
+    } else {
+        this.digitalOcean = new DigitalOceanFake();
+    }
     
     // List of application instances
     this.instances = [];
