@@ -52,7 +52,7 @@ module.exports = function DigitalOcean(apiConfig) {
     };
     
     // Release the given instance
-    this.destroy = function(instance, nodeback) {
+    this.destroy = function(instance) {
         var dropletId = instance.id;
         return callApi('/droplets/' + dropletId + '/destroy');
     };
