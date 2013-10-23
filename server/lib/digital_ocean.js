@@ -31,6 +31,14 @@ module.exports = function DigitalOcean(apiConfig) {
         return http.read(url).then(JSON.parse);
     }
     
+    // Get the droplet list
+    this.droplets = function() {
+        return callApi('/droplets/')
+            .then(function(response) {
+                return response.droplets;
+            });
+    };
+    
     // Get information on the droplet with the given ID
     this.droplet = function(id) {
         return callApi('/droplets/' + id)

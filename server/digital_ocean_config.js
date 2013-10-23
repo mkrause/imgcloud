@@ -8,7 +8,7 @@ var config = {
 };
 
 // Add the API key (which is stored separate so as not to be committed to the repository)
-config.api_key = require('./digital_ocean_api_key.js');
+config.api_key = require('./digital_ocean_api_key.js').api_key;
 
 if (!config.api_key) {
     throw new Error("No DigitalOcean API key provided");
