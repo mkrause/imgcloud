@@ -15,6 +15,7 @@ var server = httpProxy.createServer(function(req, res, proxy) {
     try {
         var instance = resolve(req, rm);
 
+        // Track the number of pending requests per instance
         if(req.url == "/images/upload") {
             if(!requests[instance.id]) {
                 requests[instance.id] = 0;
@@ -42,10 +43,12 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 }).listen(8000);
 
 server.proxy.on('end', function(req, res) {
+    // Lower (and update) the num of open connections for the instance
     if(req.url == "/images/upload") {
-        requests[1*req.headers['x-imgcloud-host']]--;
+        var instanceId = req.headers['x-imgcloud-host'];
+        requests[instanceId]--;
+        rm.getInstance(req.headers["x-"]).recordLoad(requests[instanceId]);
     }
-    rm.
     rm.emit("requestEnd", req, res);
 });
 

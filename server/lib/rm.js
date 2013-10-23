@@ -104,17 +104,16 @@ module.exports = function ResourceManager() {
     this.pingInstance = function(instance) {
         return http.request("http://" + instance.host + ":" + instance.port + "/ping");
     };
-    
+
     this.pollInstances = function() {
         console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
             this.pingInstance(instance)
                 .then(function(data) {
-                    instance.load = Number(data.headers['x-imgcloud-osload'].split(',')[0]);
                     console.log("pollInstances: %s is alive", instance);
                     
                     // Save the load for this instance in its history
-                    self.recordInstanceLoad(instance);
+                    instance.recordLoad(Number(data.headers['x-imgcloud-osload'].split(',')[0]));
                 })
                 .fail(function() {
                     console.log("pollInstances: %s died", instance);
@@ -151,8 +150,7 @@ module.exports = function ResourceManager() {
         
         this.instances = [];
         initialInstances.forEach(function(instInfo) {
-            var load = Math.round(Math.random() * 100);
-            var inst = new Instance(instInfo.id, instInfo.host, instInfo.port, load);
+            var inst = new Instance(instInfo.id, instInfo.host, instInfo.port);
             this.instances.push(inst);
             
             // Make sure our availableId is higher
@@ -173,7 +171,7 @@ module.exports = function ResourceManager() {
         var curTime = new Date;
         var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
         // Store the LB and app response times
-        this.DB.rpush("imgcloud-response-" + keyBit, curTime -  1*headers['x-imgcloud-start-lb']);
+        this.DB.rpush("imgcloud-response-" + keyBit, curTime -  1*res.getHeader['x-imgcloud-start-lb']);
 
         // Store the instance load
         this.DB.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);

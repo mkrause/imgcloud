@@ -14,12 +14,11 @@ function average(arr) {
     return avg;
 }
 
-module.exports = function Instance(id, host, port, load) {
+module.exports = function Instance(id, host, port) {
     this.id = id;
     this.host = host;
     this.port = port;
-    this.load = load;
-    
+
     this.LOAD_HISTORY_WINDOW_SIZE = 30;//parseInt(this.PROVISION_FREQUENCY / this.POLL_FREQUENCY, 10);
     this.loadHistory = [];
     
@@ -42,7 +41,7 @@ module.exports = function Instance(id, host, port, load) {
             + this.id + ", "
             + this.host + ":"
             + this.port + ", "
-            + this.load
+            + this.averageLoad()
             + "]";
     };
     
