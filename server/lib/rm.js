@@ -1,6 +1,6 @@
 var Instance = require('./instance');
 var DigitalOcean = require('./digital_ocean');
-var http = require('http');
+var http = require('q-io/http');
 
 module.exports = function ResourceManager() {
     var digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
@@ -54,20 +54,7 @@ module.exports = function ResourceManager() {
     };
     
     this.pingInstance = function(instance, onSuccess, onError) {
-        var options = {
-            hostname: instance.host,
-            port: instance.port,
-            path: '/ping',
-            method: 'GET'
-        };
-
-        var req = http.request(options, function(res) {
-            console.log(res);
-            res.on('data', function(data) {
-                onSuccess(JSON.parse(data));
-            });
-        });
-        req.on('error', onError);
+        http.read("http://" + instance.host + ":" + instance.port + "/ping").then(onSuccess).fail(onError);
     };
 
     this.pollInstances = function() {
