@@ -31,8 +31,6 @@ module.exports = function ResourceManager() {
     // Number of milliseconds between each provisioning
     this.PROVISION_FREQUENCY = 30 * 1000;
     
-    this.LOAD_HISTORY_WINDOW_SIZE = parseInt(this.PROVISION_FREQUENCY / this.POLL_FREQUENCY, 10);
-    
     // Bounds on the number of limits
     this.MIN_INSTANCES = 2;
     this.MAX_INSTANCES = 10;
@@ -107,19 +105,6 @@ module.exports = function ResourceManager() {
         return http.request("http://" + instance.host + ":" + instance.port + "/ping");
     };
     
-    this.recordInstanceLoad = function(instance) {
-        if (!instance.loadHistory) {
-            instance.loadHistory = [];
-        }
-        
-        // Remove the first element, if we've exceeded the window size
-        if (instance.loadHistory.length >= this.LOAD_HISTORY_WINDOW_SIZE) {
-            instance.loadHistory.shift();
-        }
-        
-        instance.loadHistory.push(instance.load);
-    };
-    
     this.pollInstances = function() {
         console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
@@ -141,7 +126,7 @@ module.exports = function ResourceManager() {
     this.calculateSystemLoad = function() {
         var instanceLoads = [];
         this.instances.forEach(function(instance) {
-            instanceLoads.push(average(instance.loadHistory || []));
+            instanceLoads.push(instance.averageLoad());
         }, this);
         
         return average(instanceLoads);
