@@ -174,7 +174,7 @@ module.exports = function ResourceManager() {
         var curTime = new Date;
         var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
         // Store the LB and app response times
-        this.DB.rpush("imgcloud-response-" + keyBit, curTime -  1*res.getHeader['x-imgcloud-start-lb']);
+        this.DB.rpush("imgcloud-response-" + keyBit, +curTime - parseInt(res.getHeader('x-imgcloud-start-lb'), 10));
 
         // Store the instance load
         this.DB.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);
