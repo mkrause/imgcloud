@@ -43,7 +43,7 @@ module.exports = function ResourceManager() {
     
     // Client for our IaaS provider (DigitalOcean)
     if (config.useDigitalOcean) {
-        this.digitalOcean = new DigitalOcean(require('../digital_ocean_config.js'));
+        this.digitalOcean = new DigitalOcean(config.digitalOcean);
     } else {
         this.digitalOcean = new DigitalOceanFake();
     }
