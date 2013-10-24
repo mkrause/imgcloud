@@ -1,7 +1,0 @@
-module.exports = {
-    useDigitalOcean: false,
-    initialInstances: [
-        { id: 1, host: "localhost", port: 8001 },
-        { id: 2, host: "localhost", port: 8002 }
-    ]
-};
