@@ -21,14 +21,7 @@ module.exports = function DigitalOcean(apiConfig) {
             api_key: apiConfig.apiKey,
             client_id: apiConfig.clientId
         });
-        
-        var options = {
-            hostname: "api.digitalocean.com",
-            port: 443,
-            path: path + "?" + querystring.stringify(queryParams),
-            method: 'GET'
-        };
-        
+
         var qs = querystring.stringify(queryParams);
         var url = "https://api.digitalocean.com" + path + "?" + qs;
         return http.read(url).then(JSON.parse);
