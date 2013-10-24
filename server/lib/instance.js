@@ -18,9 +18,16 @@ module.exports = function Instance(id, host, port) {
     this.id = id;
     this.host = host;
     this.port = port;
-    
+
     this.LOAD_HISTORY_WINDOW_SIZE = 30; //parseInt(PROVISION_FREQUENCY / POLL_FREQUENCY, 10);
     this.loadHistory = [];
+
+    this.STATES = {
+        DEAD: 0,
+        RUNNING: 1,
+        STARTING: 2
+    }
+    this.status = this.STATES.RUNNING;
     
     // Record the given load in our sliding window history
     this.recordLoad = function(load) {
