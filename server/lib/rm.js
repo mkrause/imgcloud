@@ -117,9 +117,6 @@ module.exports = function ResourceManager() {
             this.pingInstance(instance)
                 .then(function(data) {
                     console.log("pollInstances: %s is alive", instance);
-                    
-                    // Save the load for this instance in its history
-                    instance.recordLoad(Number(data.headers['x-imgcloud-osload'].split(',')[0]));
                 })
                 .fail(function() {
                     console.log("pollInstances: %s died", instance);

@@ -54,7 +54,6 @@ function setSystemLoad(req, res, next) {
     res.set("x-imgcloud-start-lb", req.headers['x-imgcloud-start-lb']);
     res.set("x-imgcloud-start-app", +new Date);
 
-    //res.set("X-imgcloud-host", req.headers.host);
     res.cookie("imgcloud-host", req.headers["x-imgcloud-host"]);
     next();
 }
