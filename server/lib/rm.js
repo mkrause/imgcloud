@@ -93,7 +93,7 @@ module.exports = function ResourceManager() {
                     instance.notifyAlive();
                 })
                 .fail(function() {
-                    if (instance.isBooting()) {
+                    if (instance.isStarting()) {
                         // Fine, we'll forgive you for now
                         return;
                     }
