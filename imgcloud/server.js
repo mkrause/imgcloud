@@ -13,7 +13,7 @@ var partials = require('express-partials');
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 8001);
+app.set('port', process.env.PORT || process.argv[2] || 8001);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
@@ -43,8 +43,10 @@ app.get('/ping', routes.ping);
 app.post('/images/upload', images.upload);
 
 // Start
-http.createServer(app).listen(app.get('port'), function () {
-    console.log('Express server listening on port ' + app.get('port'));
+var port = app.get('port');
+console.log("Starting instance on port " + port);
+http.createServer(app).listen(port, function () {
+    console.log('Express server listening on port ' + port);
 });
 
 var os = require('os');

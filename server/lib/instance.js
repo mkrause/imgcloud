@@ -17,6 +17,14 @@ module.exports = function Instance(id, host, port, load) {
         return this.state == this.STATES.STARTING;
     };
     
+    this.isRunning = function() {
+        return this.state == this.STATES.RUNNING;
+    };
+    
+    this.isDead = function() {
+        return this.state == this.STATES.DEAD;
+    };
+    
     this.notifyAlive = function() {
         this.state = this.STATES.RUNNING;
     };

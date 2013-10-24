@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var Q = require('q');
 var Instance = require('./instance');
 var spawn = require('child_process').spawn;
 
@@ -7,27 +8,44 @@ module.exports = function DigitalOceanFake() {
     var processes = {};
     
     this.droplets = function() {
-        return _.values(processes);
+        return Q.fcall(function() {
+            return _.values(processes);
+        });
     };
     
     this.droplet = function(id) {
-        return processes[id];
+        return Q.fcall(function() {
+            if (!processes[id]) {
+                throw new Error("No such instance");
+            }
+            return processes[id];
+        });
     };
     
     this.allocate = function(id) {
-        // Assumes we're in the 'server' directory
-        var proc = spawn('./start_instance.sh', [id]);
-        proc.stdout.on('data', function(data) { console.log("" + data) });
-        proc.stderr.on('data', function(data) { console.log("" + data) });
-        
-        processes[id] = proc;
+        return Q.fcall(function() {
+            var port = id;
+            
+            // Assumes we're in the 'server' directory
+            var proc = spawn('node', ['../imgcloud/server.js', port]);
+            proc.stdout.on('data', function(data) { console.log("" + data) });
+            proc.stderr.on('data', function(data) { console.log("" + data) });
+            
+            processes[id] = proc;
+            
+            return new Instance(id, 'localhost', port);
+        });
     };
     
     // Release the given instance
     this.deallocate = function(id) {
-        if(processes[id]) {
-            processes[id].kill('SIGHUP');
-        }
-        delete processes[id];
+        return Q.fcall(function() {
+            if (processes[id]) {
+                processes[id].kill('SIGHUP');
+            }
+            delete processes[id];
+            
+            return true;
+        });
     };
 };

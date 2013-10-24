@@ -29,6 +29,15 @@ module.exports = function ResourceManager() {
     this.availablePort = 8001;
     
     this.allocateInstance = function() {
+        // Enforce upper bound on the number of instances
+        var numInstances = this.instances.length;
+        var canAllocate = numInstances < config.MAX_INSTANCES;
+        
+        if (!canAllocate) {
+            console.log("allocateInstance: did not allocate, upper bound reached");
+            return;
+        }
+        
         var id = this.availableId;
         console.log("Allocating instance with ID: " + id);
         
@@ -37,19 +46,36 @@ module.exports = function ResourceManager() {
     };
     
     this.deallocateInstance = function(instance) {
+        // Enforce lower bound on the number of instances
+        var numInstances = this.instances.length;
+        var canDeallocate = numInstances > config.MIN_INSTANCES;
+        
+        if (!canDeallocate) {
+            console.log("deallocateInstance: did not deallocate, lower bound reached");
+            return;
+        }
+        
         console.log("Deallocating instance: " + instance);
         return this.digitalOcean.deallocate(instance);
     };
-
+    
+    this.addInstance = function(instance) {
+        this.instances.push(instance);
+    };
+    
+    this.removeInstance = function(instance) {
+        var index = this.instances.indexOf(instance);
+        if (index != -1) {
+            this.instances.splice(index, 1);
+        }
+    };
+    
     this.markInstanceDead = function(instance) {
         console.log("markInstanceDead: marking %s", instance);
         instance.notifyDead();
         
         // Remove instance
-        var index = this.instances.indexOf(instance);
-        if (index != -1) {
-            this.instances.splice(index, 1);
-        }
+        this.removeInstance(instance);
         
         this.deallocateInstance(instance)
             .then(function() {
@@ -57,7 +83,7 @@ module.exports = function ResourceManager() {
             })
             .fail(console.error);
         
-        // Check if we need to allocate a new instance to make up
+        // Check if we need to allocate a new instance to make up for the deallocated one
         if (this.instances.length < config.MIN_INSTANCES) {
             this.allocateInstance();
         }
@@ -65,6 +91,12 @@ module.exports = function ResourceManager() {
 
     this.getInstances = function() {
         return this.instances;
+    };
+    
+    this.getRunningInstances = function() {
+        return this.instances.filter(function(instance) {
+            return instance.isRunning();
+        });
     };
     
     this.getInstance = function(id) {
@@ -91,9 +123,10 @@ module.exports = function ResourceManager() {
                     console.log("pollInstances: %s is alive", instance);
                     instance.notifyAlive();
                 })
-                .fail(function() {
+                .fail(function(error) {
                     if (instance.isStarting()) {
                         // Fine, we'll forgive you for now
+                        console.log("pollInstances: %s has not booted yet", instance);
                         return;
                     }
                     
@@ -108,6 +141,7 @@ module.exports = function ResourceManager() {
         setInterval(this.pollInstances.bind(this), freq);
     };
     
+    // Calculate the average load over instances in the system
     this.calculateSystemLoad = function() {
         var instanceLoads = [];
         this.instances.forEach(function(instance) {
@@ -119,14 +153,27 @@ module.exports = function ResourceManager() {
     
     // Provision (allocate or deallocate) resources based on the system load
     this.provision = function() {
-        var systemLoad = this.calculateSystemLoad();
+        var systemLoad = 1;//20 * Math.random();//this.calculateSystemLoad();
         console.log("System load: " + systemLoad);
         
-        var numInstances = this.instances.length;
-        if (systemLoad > config.ALLOCATION_THRESHOLD && numInstances < config.MAX_INSTANCES) {
-            this.allocateInstance();
-        } else if (systemLoad < config.DEALLOCATION_THRESHOLD && numInstances > config.MIN_INSTANCES) {
-            this.deallocateInstance(this.instances[0]); // Randomly kill some instance
+        if (systemLoad > config.ALLOCATION_THRESHOLD) {
+            console.log("provision: allocate");
+            
+            var id = this.availableId++;
+            this.allocateInstance(id)
+                .then(function(instance) {
+                    self.addInstance(instance);
+                })
+                .fail(console.error);
+        } else if (systemLoad < config.DEALLOCATION_THRESHOLD) {
+            console.log("provision: deallocate");
+            
+            // Randomly kill some instance
+            var victim = this.getRunningInstances()[0];
+            this.removeInstance(victim);
+            this.deallocateInstance(victim);
+        } else {
+            console.log("provision: all is well");
         }
     };
     
@@ -144,7 +191,7 @@ module.exports = function ResourceManager() {
         this.instances = [];
         initialInstances.forEach(function(instInfo) {
             var inst = new Instance(instInfo.id, instInfo.host, instInfo.port);
-            this.instances.push(inst);
+            this.addInstance(inst);
             
             // Make sure our availableId is higher
             this.availableId = Math.max(this.availableId, instInfo.id + 1);
