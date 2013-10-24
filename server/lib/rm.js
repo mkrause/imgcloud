@@ -156,11 +156,20 @@ module.exports = function ResourceManager() {
     this.saveRequestStats = function(instanceId, res) {
         var curTime = new Date;
         var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
+
+        var values = {}
+
         // Store the LB and app response times
-        this.db.rpush("imgcloud-response-" + keyBit, +curTime - parseInt(res.getHeader('x-imgcloud-start-lb'), 10));
+        values["imgcloud-response-" + keyBit] = +curTime - parseInt(res.getHeader('x-imgcloud-start-lb'), 10)
 
         // Store the instance load
-        this.db.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);
+        if(res.getHeader('x-imgcloud-osload')) {
+            values["imgcloud-osload-" + keyBit] = res.getHeader('x-imgcloud-osload').split(",")[0];
+        } else {
+            console.log("saveRequestStats ERROR: no osload provided");
+        }
+
+        this.db.mset(values);
     };
     
     // Emit an event
