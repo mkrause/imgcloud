@@ -30,7 +30,7 @@ var server = httpProxy.createServer(function (req, res, proxy) {
                 requests[instance.id] = 0;
             }
             requests[instance.id]++;
-            instance.recordLoad(requests[instance.id]);
+            instance.load = requests[instance.id];
 
             console.log("Proxied to %s, has %s open connections", instance, requests[instance.id]);
         }
@@ -75,7 +75,7 @@ function recordRequestEnd(url, id) {
 
         var instance = rm.getInstance(instanceId);
         if (instance) {
-            instance.recordLoad(requests[instanceId]);
+            instance.load = requests[instanceId];
         }
     }
 }
