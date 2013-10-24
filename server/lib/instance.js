@@ -18,11 +18,11 @@ module.exports = function Instance(id, host, port, load) {
     };
     
     this.notifyAlive = function() {
-        this.state = 'alive';
+        this.state = this.STATES.RUNNING;
     };
     
     this.notifyDead = function() {
-        this.state = 'dead';
+        this.state = this.STATES.DEAD;
     };
     
     this.toString = function() {
