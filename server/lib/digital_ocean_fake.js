@@ -25,7 +25,9 @@ module.exports = function DigitalOceanFake() {
     
     // Release the given instance
     this.deallocate = function(id) {
-        processes[id].kill('SIGHUP');
+        if(processes[id]) {
+            processes[id].kill('SIGHUP');
+        }
         delete processes[id];
     };
 };
