@@ -86,7 +86,6 @@ module.exports = function ResourceManager() {
     this.pollInstances = function() {
         console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
-            //TODO: need to distinguish dead nodes from nodes that are still booting
             this.pingInstance(instance)
                 .then(function(data) {
                     console.log("pollInstances: %s is alive", instance);

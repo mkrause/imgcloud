@@ -13,7 +13,7 @@ module.exports = function Instance(id, host, port, load) {
     
     this.state = this.STATES.STARTING;
     
-    this.isBooting = function() {
+    this.isStarting = function() {
         return this.state == this.STATES.STARTING;
     };
     
