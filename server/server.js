@@ -12,11 +12,11 @@ rm.bootstrap(initialInstances);
 var requests = {};
 
 // Start proxy server
-var server = httpProxy.createServer(function(req, res, proxy) {
+var server = httpProxy.createServer(function (req, res, proxy) {
     try {
         // Find some instance to which we can pass this request
         var instance = resolve(req, rm);
-        
+
         // Track the number of pending requests per instance
         if (req.url == "/images/upload") {
             if (!requests[instance.id]) {
@@ -30,7 +30,7 @@ var server = httpProxy.createServer(function(req, res, proxy) {
 
         req.headers["x-imgcloud-host"] = instance.id;
         req.headers["x-imgcloud-start-lb"] = +new Date;
-        
+
         proxy.proxyRequest(req, res, {
             host: instance.host,
             port: instance.port
@@ -39,27 +39,36 @@ var server = httpProxy.createServer(function(req, res, proxy) {
         res.writeHead(500, {
             "Content-Type": "text/plain"
         });
-        
+
         res.end("Fail whale:\n" + e.stack + "\n");
     }
 }).listen(8000);
 
-server.proxy.on('end', function(req, res) {
+server.proxy.on('end', function (req, res) {
     // Lower (and update) the num of open connections for the instance
-    if (req.url == "/images/upload") {
-        var instanceId = parseInt(req.headers['x-imgcloud-host'], 10);
-        requests[instanceId]--;
-        rm.getInstance(req.headers["x-"]).recordLoad(requests[instanceId]);
-    }
+    recordRequestEnd(req.url, req.headers['x-imgcloud-host']);
     rm.emit("requestEnd", req, res);
 });
 
-server.proxy.on('proxyError', function(err, req, res) {
+server.proxy.on('proxyError', function (err, req, res) {
     console.log("proxyError");
+    recordRequestEnd(req.url, req.headers['x-imgcloud-host']);
 
     res.writeHead(500, {
         "Content-Type": "text/plain"
     });
-    res.end("Proxy error while redirecting request to " + req.headers['x-imgcloud-host'] +"\n");
+    res.end("Proxy error while redirecting request to " + req.headers['x-imgcloud-host'] + "\n");
     rm.emit('serverFailure', req, res);
 });
+
+function recordRequestEnd(url, id) {
+    if (url == "/images/upload") {
+        var instanceId = parseInt(id, 10);
+        requests[instanceId]--;
+
+        var instance = rm.getInstance(instanceId);
+        if (instance) {
+            instance.recordLoad(requests[instanceId]);
+        }
+    }
+}

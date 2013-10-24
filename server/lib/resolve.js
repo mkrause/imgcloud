@@ -14,7 +14,7 @@ module.exports = function resolve(req, rm) {
 //        previousHost = headers["imgcloud-host"].split(",");
 //    }
     // TODO: sticky users
-//    var instance;
+    var instance;
 //    if (previousHost) {
 //        console.log({host: previousHost[0], port: previousHost[1]});
 //        instance = rm.getInstance({host: previousHost[0], port: previousHost[1]});
