@@ -40,6 +40,7 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', routes.index);
 app.get('/ping', routes.ping);
+app.get('/stats', routes.stats);
 app.post('/images/upload', images.upload);
 
 // Start
