@@ -1,45 +1,16 @@
 var http = require('q-io/http');
+var redis = require('then-redis');
+
 var config = require('../config.js');
 var Instance = require('./instance.js');
 var DigitalOcean = require('./digital_ocean.js');
 var DigitalOceanFake = require('./digital_ocean_fake.js');
-var redis = require('then-redis');
-
-// Get the average of a numerical array
-function average(arr) {
-    var sum = arr.reduce(function(prev, cur) {
-        return prev + cur;
-    }, 0);
-    
-    var avg;
-    if (arr.length == 0) {
-        avg = 0;
-    } else {
-        avg = sum / arr.length;
-    }
-    
-    return avg;
-}
 
 module.exports = function ResourceManager() {
     var self = this;
 
     // Redis database used for storage
-    this.DB = redis.createClient();
-    
-    // Number of milliseconds between each uptime check
-    this.POLL_FREQUENCY = 5 * 1000;
-    
-    // Number of milliseconds between each provisioning
-    this.PROVISION_FREQUENCY = 30 * 1000;
-    
-    // Bounds on the number of limits
-    this.MIN_INSTANCES = 2;
-    this.MAX_INSTANCES = 10;
-    
-    // Thresholds for allocating or deallocating instances
-    this.ALLOCATION_THRESHOLD = 0.80;
-    this.DEALLOCATION_THRESHOLD = 0.50;
+    this.db = redis.createClient();
     
     // Client for our IaaS provider (DigitalOcean)
     if (config.useDigitalOcean) {
@@ -54,7 +25,7 @@ module.exports = function ResourceManager() {
     // Some ID that is guaranteed to be currently available
     this.availableId = 1;
     
-    // Some port we know to be available (useful for creating local test this.instances)
+    // Some port we know to be available (useful for creating local test instances)
     this.availablePort = 8001;
     
     this.allocateInstance = function() {
@@ -72,6 +43,7 @@ module.exports = function ResourceManager() {
 
     this.markInstanceDead = function(instance) {
         console.log("markInstanceDead: marking %s", instance);
+        instance.notifyDead();
         
         // Remove instance
         var index = this.instances.indexOf(instance);
@@ -86,7 +58,7 @@ module.exports = function ResourceManager() {
             .fail(console.error);
         
         // Check if we need to allocate a new instance to make up
-        if (this.instances.length < this.MIN_INSTANCES) {
+        if (this.instances.length < config.MIN_INSTANCES) {
             this.allocateInstance();
         }
     };
@@ -114,15 +86,27 @@ module.exports = function ResourceManager() {
     this.pollInstances = function() {
         console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
+            //TODO: need to distinguish dead nodes from nodes that are still booting
             this.pingInstance(instance)
                 .then(function(data) {
                     console.log("pollInstances: %s is alive", instance);
+                    instance.notifyAlive();
                 })
                 .fail(function() {
+                    if (instance.isBooting()) {
+                        // Fine, we'll forgive you for now
+                        return;
+                    }
+                    
                     console.log("pollInstances: %s died", instance);
                     self.markInstanceDead(instance);
                 });
         }, this);
+    };
+    
+    this.startPolling = function(freq) {
+        freq = freq || config.POLL_FREQUENCY;
+        setInterval(this.pollInstances.bind(this), freq);
     };
     
     this.calculateSystemLoad = function() {
@@ -140,11 +124,18 @@ module.exports = function ResourceManager() {
         console.log("System load: " + systemLoad);
         
         var numInstances = this.instances.length;
-        if (systemLoad > this.ALLOCATION_THRESHOLD && numInstances < this.MAX_INSTANCES) {
+        if (systemLoad > config.ALLOCATION_THRESHOLD && numInstances < config.MAX_INSTANCES) {
             this.allocateInstance();
-        } else if (systemLoad < this.DEALLOCATION_THRESHOLD && numInstances > this.MIN_INSTANCES) {
+        } else if (systemLoad < config.DEALLOCATION_THRESHOLD && numInstances > config.MIN_INSTANCES) {
             this.deallocateInstance(this.instances[0]); // Randomly kill some instance
         }
+    };
+    
+    this.startProvisioning = function(freq) {
+        freq = freq || config.PROVISION_FREQUENCY;
+        
+        // Check the load at regular intervals, and provision accordingly
+        setInterval(this.provision.bind(this), freq);
     };
     
     // Bootstrap the resource manager, with an optional set of initial instances
@@ -159,25 +150,18 @@ module.exports = function ResourceManager() {
             // Make sure our availableId is higher
             this.availableId = Math.max(this.availableId, instInfo.id + 1);
         }, this);
-        console.log("Found " + this.instances.length + " bootstrap instances");
-
-        // Start polling
-        if(process.env.POLL != 0) {
-            setInterval(this.pollInstances.bind(this), this.POLL_FREQUENCY);
-
-            // Check the load at regular intervals, and provision accordingly
-            setInterval(this.provision.bind(this), this.PROVISION_FREQUENCY);
-        }
+        
+        console.log("Initialized RM (with %d bootstrap instances)", this.instances.length);
     };
-
+    
     this.saveRequestStats = function(instanceId, res) {
         var curTime = new Date;
         var keyBit = instanceId + "-"+curTime.getHours() + ":"+ curTime.getMinutes() + ":" + curTime.getSeconds();
         // Store the LB and app response times
-        this.DB.rpush("imgcloud-response-" + keyBit, +curTime - parseInt(res.getHeader('x-imgcloud-start-lb'), 10));
+        this.db.rpush("imgcloud-response-" + keyBit, +curTime - parseInt(res.getHeader('x-imgcloud-start-lb'), 10));
 
         // Store the instance load
-        this.DB.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);
+        this.db.rpush("imgcloud-osload-" + keyBit, res.getHeader('x-imgcloud-osload').split(",")[0]);
     };
     
     // Emit an event

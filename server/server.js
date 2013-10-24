@@ -1,5 +1,7 @@
 var http = require('http');
 var httpProxy = require('http-proxy');
+
+var config = require('./config.js');
 var ResourceManager = require('./lib/rm.js');
 var resolve = require('./lib/resolve.js');
 
@@ -7,9 +9,14 @@ var resolve = require('./lib/resolve.js');
 var rm = new ResourceManager();
 var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
+rm.startProvisioning();
 
 // Number of requests per instance (which we can use to indicate the load of an instance)
 var requests = {};
+var systemLoadHistory = [];
+
+// Start polling
+setInterval(poll, config.POLL_FREQUENCY);
 
 // Start proxy server
 var server = httpProxy.createServer(function (req, res, proxy) {
@@ -71,4 +78,40 @@ function recordRequestEnd(url, id) {
             instance.recordLoad(requests[instanceId]);
         }
     }
+}
+
+// Get the average of a numerical array
+function average(arr) {
+    var sum = arr.reduce(function(prev, cur) {
+        return prev + cur;
+    }, 0);
+    
+    var avg;
+    if (arr.length == 0) {
+        avg = 0;
+    } else {
+        avg = sum / arr.length;
+    }
+    
+    return avg;
+}
+
+function poll() {
+    // Have the RM poll each instance (e.g. to check if they're alive)
+    rm.pollInstances();
+    
+    // Calculate the current system load
+    var instanceLoads = [];
+    rm.getInstances().forEach(function(instance) {
+        instanceLoads.push(instance.load);
+    });
+    var load = average(instanceLoads);
+    
+    // Remove the first element, if we've exceeded the window size
+    if (systemLoadHistory.length >= config.LOAD_HISTORY_WINDOW_SIZE) {
+        systemLoadHistory.shift();
+    }
+    
+    // Store the current load of the instance in our sliding window
+    systemLoadHistory.push(load);
 }

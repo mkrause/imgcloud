@@ -20,10 +20,10 @@ module.exports = {
         }
     },
     
-    POLL_FREQUENCY: 5 * 1000,
-    PROVISION_FREQUENCY: 30 * 1000,
-    MIN_INSTANCES: 2,
-    MAX_INSTANCES: 10,
+    POLL_FREQUENCY: 5 * 1000, // Time between polling in ms
+    PROVISION_FREQUENCY: 30 * 1000, // Time between provisioning checks in ms
+    MIN_INSTANCES: 2, // Lower bound on number of instances provisioned
+    MAX_INSTANCES: 10, // Upper bound on number of instances provisioned
     ALLOCATION_THRESHOLD: 12, // Average load 
     DEALLOCATION_THRESHOLD: 2
 };
