@@ -27,15 +27,6 @@ module.exports = function ResourceManager() {
     this.availableId = 1;
 
     this.allocateInstance = function() {
-        // Enforce upper bound on the number of instances
-        var numInstances = this.instances.length;
-        var canAllocate = numInstances < config.MAX_INSTANCES;
-
-        if (!canAllocate) {
-            console.log("allocateInstance: did not allocate, upper bound reached");
-            return;
-        }
-
         var id = this.availableId;
         console.log("Allocating instance with ID: " + id);
 
@@ -44,17 +35,7 @@ module.exports = function ResourceManager() {
     };
 
     this.deallocateInstance = function(instance) {
-        // Enforce lower bound on the number of instances
-        var numInstances = this.instances.length;
-        var canDeallocate = numInstances > config.MIN_INSTANCES;
-
-        if (!canDeallocate) {
-            console.log("deallocateInstance: did not deallocate, lower bound reached");
-            return;
-        }
-
         console.log("Deallocating instance: " + instance);
-        this.removeInstance(victim);
         return this.digitalOcean.deallocate(instance);
     };
 
@@ -147,25 +128,37 @@ module.exports = function ResourceManager() {
 
     // Provision (allocate or deallocate) resources based on the system load
     this.provision = function() {
-//        var systemLoad = 20 * Math.random();
-        var systemLoad = this.calculateSystemLoad(); //TODO
+        var systemLoad = 20 * Math.random();
+        //var systemLoad = this.calculateSystemLoad();
+        var numInstances = this.instances.length;
+
         console.log("System load: %s, thresholds are %s and %s", systemLoad, config.DEALLOCATION_THRESHOLD, config.ALLOCATION_THRESHOLD);
 
         if (systemLoad > config.ALLOCATION_THRESHOLD) {
             console.log("provision: allocate");
 
-            var id = this.availableId++;
-            this.allocateInstance(id)
-                .then(function(instance) {
-                    self.addInstance(instance);
-                })
-                .fail(console.error);
+            if(numInstances < config.MAX_INSTANCES) {
+                var id = this.availableId++;
+                this.allocateInstance(id)
+                    .then(function(instance) {
+                        self.addInstance(instance);
+                    })
+                    .fail(console.error);
+            } else {
+                console.log("provision: did not allocate due to MAX_INSTANCES");
+            }
         } else if (systemLoad < config.DEALLOCATION_THRESHOLD) {
             console.log("provision: deallocate");
 
-            // Randomly kill some instance
-            var victim = this.getRunningInstances()[0];
-            this.deallocateInstance(victim);
+            // Enforce lower bound on the number of instances
+            if(numInstances > config.MIN_INSTANCES) {
+                // Randomly kill some instance
+                var victim = this.getRunningInstances()[0];
+                this.removeInstance(victim);
+                this.deallocateInstance(victim);
+            } else {
+                console.log("provision: did not deallocate due to MIN_INSTANCES");
+            }
         } else {
             console.log("provision: all is well");
         }
