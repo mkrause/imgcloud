@@ -26,9 +26,6 @@ module.exports = function ResourceManager() {
     // Some ID that is guaranteed to be currently available
     this.availableId = 1;
 
-    // Some port we know to be available (useful for creating local test instances)
-    this.availablePort = 8001;
-
     this.allocateInstance = function() {
         // Enforce upper bound on the number of instances
         var numInstances = this.instances.length;
@@ -57,6 +54,7 @@ module.exports = function ResourceManager() {
         }
 
         console.log("Deallocating instance: " + instance);
+        this.removeInstance(victim);
         return this.digitalOcean.deallocate(instance);
     };
 
@@ -137,11 +135,6 @@ module.exports = function ResourceManager() {
         }, this);
     };
 
-    this.startPolling = function(freq) {
-        freq = freq || config.POLL_FREQUENCY;
-        setInterval(this.pollInstances.bind(this), freq);
-    };
-
     // Calculate the average load over instances in the system
     this.calculateSystemLoad = function() {
         var instanceLoads = [];
@@ -172,7 +165,6 @@ module.exports = function ResourceManager() {
 
             // Randomly kill some instance
             var victim = this.getRunningInstances()[0];
-            this.removeInstance(victim);
             this.deallocateInstance(victim);
         } else {
             console.log("provision: all is well");
