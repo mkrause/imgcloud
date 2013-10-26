@@ -37,7 +37,6 @@ exports.stats = function (req, res) {
             var time = true;
             if(fromTime) {
                 time = strToTime(fragments[3]) > fromTime;
-                console.log("%s > %s = %s", strToTime(fragments[3]), fromTime, time)
             }
             return time && ["osload", "response"].indexOf(fragments[1]) != -1;
         });

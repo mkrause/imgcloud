@@ -17,7 +17,7 @@ exports.upload = function (req, res) {
 // Either use GraphicsMagick (fast) or ImageMagick (slow)
 var gm = require('gm');
 var imageMagick = gm.subClass({ imageMagick: true });
-var engine = gm;
+var engine = imageMagick;
 var fs = require('fs');
 
 var OPTIONS = {
