@@ -5,6 +5,7 @@ var config = require('../config.js');
 var Instance = require('./instance.js');
 var DigitalOcean = require('./digital_ocean.js');
 var DigitalOceanFake = require('./digital_ocean_fake.js');
+var average = require('./average.js');
 
 module.exports = function ResourceManager() {
     var self = this;
@@ -145,7 +146,7 @@ module.exports = function ResourceManager() {
     this.calculateSystemLoad = function() {
         var instanceLoads = [];
         this.instances.forEach(function(instance) {
-            instanceLoads.push(instance.averageLoad());
+            instanceLoads.push(instance.load);
         }, this);
 
         return average(instanceLoads);
@@ -153,8 +154,9 @@ module.exports = function ResourceManager() {
 
     // Provision (allocate or deallocate) resources based on the system load
     this.provision = function() {
-        var systemLoad = 20 * Math.random();//this.calculateSystemLoad(); //TODO
-        console.log("System load: " + systemLoad);
+//        var systemLoad = 20 * Math.random();
+        var systemLoad = this.calculateSystemLoad(); //TODO
+        console.log("System load: %s, thresholds are %s and %s", systemLoad, config.DEALLOCATION_THRESHOLD, config.ALLOCATION_THRESHOLD);
 
         if (systemLoad > config.ALLOCATION_THRESHOLD) {
             console.log("provision: allocate");

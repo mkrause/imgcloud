@@ -4,6 +4,7 @@ var httpProxy = require('http-proxy');
 var config = require('./config.js');
 var ResourceManager = require('./lib/rm.js');
 var resolve = require('./lib/resolve.js');
+var average = require('./lib/average.js');
 
 // Initialize the resource manager
 var rm = new ResourceManager();
@@ -78,22 +79,6 @@ function recordRequestEnd(url, id) {
             instance.load = requests[instanceId];
         }
     }
-}
-
-// Get the average of a numerical array
-function average(arr) {
-    var sum = arr.reduce(function(prev, cur) {
-        return prev + cur;
-    }, 0);
-    
-    var avg;
-    if (arr.length == 0) {
-        avg = 0;
-    } else {
-        avg = sum / arr.length;
-    }
-    
-    return avg;
 }
 
 function poll() {
