@@ -27,6 +27,18 @@ module.exports = function ResourceManager() {
     // Some ID that is guaranteed to be currently available
     this.availableId = 1;
 
+    this.timestamp = function(date) {
+        if(!date) {
+            date = new Date;
+        }
+
+        var format = function(num) {
+            return num < 10 ? "0" + num : num;
+        }
+
+        return format(date.getHours()) + ":"+ format(date.getMinutes()) + ":" + format(date.getSeconds());
+    };
+
     this.allocateInstance = function() {
         var id = this.availableId;
         console.log("Allocating instance with ID: " + id);
@@ -35,11 +47,13 @@ module.exports = function ResourceManager() {
         return this.digitalOcean.allocate(id)
             .then(function(instance) {
                 self.addInstance(instance);
+                self.db.set("imgcloud-allocation-"+id+"-"+self.timestamp(), 1);
             });
     };
 
     this.deallocateInstance = function(instance) {
         console.log("Deallocating instance: " + instance);
+        this.db.set("imgcloud-deallocation-"+instance.id+"-"+this.timestamp(), 1);
         return this.digitalOcean.deallocate(instance);
     };
 
@@ -145,25 +159,13 @@ module.exports = function ResourceManager() {
         return average(instanceLoads);
     };
 
-    this.timestamp = function(date) {
-        if(!date) {
-            date = new Date;
-        }
-
-        var format = function(num) {
-            return num < 10 ? "0" + num : num;
-        }
-
-        return format(date.getHours()) + ":"+ format(date.getMinutes()) + ":" + format(date.getSeconds());
-    };
-
     this.storeLoads = function() {
         var time = new Date;
 
         var data = {}
-        data["imgcloud-systemload-0-"+timestamp(time)] = systemLoad;
+        data["imgcloud-systemload-0-"+this.timestamp(time)] = this.calculateSystemLoad();
         this.instances.forEach(function(instance) {
-            data["imgcloud-instanceload-"+instance.id+timestamp(time)] = instance.load;
+            data["imgcloud-instanceload-"+instance.id+"-"+self.timestamp(time)] = instance.load;
         });
 
         this.db.mset(data);
