@@ -237,7 +237,12 @@ module.exports = function ResourceManager() {
         console.log("Received " + eventName);
         var instanceId = req.headers['x-imgcloud-host'];
         var instance = this.getInstance(instanceId);
-
+        
+        // Poller beat us to it?
+        if (!instance) {
+            return;
+        }
+        
         switch (eventName) {
             case "serverFailure":
                 console.log("ServerFailure for " + instanceId);
