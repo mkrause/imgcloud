@@ -93,7 +93,8 @@ module.exports = function ResourceManager() {
     };
 
     this.pingInstance = function(instance) {
-        return http.request("http://" + instance.host + ":" + instance.port + "/ping");
+        return http.request("http://" + instance.host + ":" + instance.port + "/ping")
+            .timeout(2 * config.POLL_FREQUENCY); // Cancel the ping after at most 2 polls
     };
 
     this.pollInstances = function() {
