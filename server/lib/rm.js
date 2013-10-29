@@ -60,7 +60,7 @@ module.exports = function ResourceManager() {
 
         this.deallocateInstance(instance)
             .then(function() {
-                console.log("Succesfully deallocated: " + instances);
+                console.log("Succesfully deallocated: " + instance);
             })
             .fail(console.error);
 
