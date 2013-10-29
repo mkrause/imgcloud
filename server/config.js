@@ -8,7 +8,7 @@ if (!params) {
 module.exports = {
     initialInstances: params.initialInstances,
     
-    useDigitalOcean: false,
+    useDigitalOcean: params.useDigitalOcean,
     digitalOcean: {
         apiKey: params.digitalOcean.apiKey,
         clientId: "p4F9BVhFJso91hBdfYoVd",

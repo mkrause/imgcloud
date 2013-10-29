@@ -1,6 +1,7 @@
 
 module.exports = {
     initialInstances: [],
+    useDigitalOcean: false,
     digitalOcean: {
         apiKey: ""
     }

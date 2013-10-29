@@ -63,4 +63,18 @@ module.exports = function DigitalOcean(apiConfig) {
         var dropletId = instance.id;
         return callApi('/droplets/' + dropletId + '/destroy');
     };
+    
+    // It may take a bit of time for an instance to get an address, so fetch it if it doesn't exist
+    this.getAddress = function(instance) {
+        return callApi('/droplets/' + instance.id)
+            .then(function(response) {
+                var address = response.droplet.ip_address;
+                
+                if (!address) {
+                    throw new Error("No address yet");
+                }
+                
+                return address;
+            });
+    };
 };

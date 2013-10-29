@@ -1,5 +1,6 @@
 var http = require('q-io/http');
 var redis = require('then-redis');
+var _ = require('underscore');
 
 var config = require('../config.js');
 var Instance = require('./instance.js');
@@ -104,6 +105,17 @@ module.exports = function ResourceManager() {
                     instance.notifyAlive();
                 })
                 .fail(function(error) {
+                    if (!instance.host) {
+                        console.log("pollInstances: %s does not have an address yet", instance);
+                        
+                        self.digitalOcean.getAddress(instance)
+                            .then(function(address) {
+                                instance.host = address;
+                            });
+                        
+                        return;
+                    }
+                    
                     if (instance.isStarting()) {
                         // Fine, we'll forgive you for now
                         console.log("pollInstances: %s has not booted yet", instance);
@@ -143,7 +155,7 @@ module.exports = function ResourceManager() {
                     .then(function(instance) {
                         self.addInstance(instance);
                     })
-                    .fail(console.error);
+                    .done(); // Throw any exceptions
             } else {
                 console.log("provision: did not allocate due to MAX_INSTANCES");
             }
@@ -183,10 +195,25 @@ module.exports = function ResourceManager() {
             // Make sure our availableId is higher
             this.availableId = Math.max(this.availableId, instInfo.id + 1);
         }, this);
-
+        
+        // Allocate at least our minimum
+        _.forEach(_.range(config.MIN_INSTANCES), function() {
+            this.allocateInstance()
+                .then(function(instance) {
+                    self.addInstance(instance);
+                })
+                .done(); // Throw any exceptions
+        }, this);
+        
         console.log("Initialized RM (with %d bootstrap instances)", this.instances.length);
     };
-
+    
+    this.destroyAll = function() {
+        this.instances.forEach(function(instance) {
+            this.markInstanceDead(instance);
+        }, this);
+    };
+    
     this.saveRequestStats = function(instanceId, res) {
         var format = function(num) {
             return num < 10 ? "0" + num : num;
