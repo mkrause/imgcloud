@@ -50,6 +50,10 @@ module.exports = function DigitalOcean(apiConfig) {
         
         return callApi('/droplets/new', params)
             .then(function(response) {
+                if (!response.droplet) {
+                    console.error(response);
+                }
+                
                 return callApi('/droplets/' + response.droplet.id);
             })
             .then(function(response) {
