@@ -32,7 +32,10 @@ module.exports = function ResourceManager() {
         console.log("Allocating instance with ID: " + id);
 
         this.availableId += 1;
-        return this.digitalOcean.allocate(id);
+        return this.digitalOcean.allocate(id)
+            .then(function(instance) {
+                self.addInstance(instance);
+            });
     };
 
     this.deallocateInstance = function(instance) {
@@ -153,9 +156,6 @@ module.exports = function ResourceManager() {
             if(numInstances < config.MAX_INSTANCES) {
                 var id = this.availableId++;
                 this.allocateInstance(id)
-                    .then(function(instance) {
-                        self.addInstance(instance);
-                    })
                     .done(); // Throw any exceptions
             } else {
                 console.log("provision: did not allocate due to MAX_INSTANCES");
