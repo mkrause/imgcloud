@@ -154,9 +154,7 @@ module.exports = function ResourceManager() {
             console.log("provision: allocate");
 
             if(numInstances < config.MAX_INSTANCES) {
-                var id = this.availableId++;
-                this.allocateInstance(id)
-                    .done(); // Throw any exceptions
+                this.allocateInstance().done(); // Throw any exceptions
             } else {
                 console.log("provision: did not allocate due to MAX_INSTANCES");
             }
@@ -199,11 +197,7 @@ module.exports = function ResourceManager() {
         
         // Allocate at least our minimum
         _.forEach(_.range(config.MIN_INSTANCES), function() {
-            this.allocateInstance()
-                .then(function(instance) {
-                    self.addInstance(instance);
-                })
-                .done(); // Throw any exceptions
+            this.allocateInstance().done(); // Throw any exceptions
         }, this);
         
         console.log("Initialized RM (with %d bootstrap instances)", this.instances.length);
