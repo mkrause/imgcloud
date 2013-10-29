@@ -11,11 +11,7 @@ var strToTime = function(timeString) {
 }
 
 DB.keys("imgcloud-*").then(function (keys) {
-    var filtered_keys = keys.filter(function(value) {
-        var fragments = value.split("-");
-        var time = true;
-        return time && ["osload", "response"].indexOf(fragments[1]) != -1;
-    });
+    var filtered_keys = keys;
 
     DB.send("mget", filtered_keys).then(function (values) {
         for (var i = 0; i < filtered_keys.length; i++) {
