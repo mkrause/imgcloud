@@ -9,6 +9,9 @@ The default parameters are tweaked for high quality results at the cost of some 
 * `NodeJS`
 * `ExpressJS` and more (see `package.json`)
 
+Installation on Ubuntu/Debian:
+`apt-get install redis-server nodejs nodejs-legacy npm git `
+
 # Third party code
 
 imgCloud contains several third party libraries:
