@@ -3,6 +3,7 @@ var os = require('os');
  * POST image
  */
 exports.upload = function (req, res) {
+    console.log("Received image upload");
     var options = req.body.processing;
     if(!(options instanceof Array)) {
         options = [options];

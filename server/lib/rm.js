@@ -128,8 +128,8 @@ module.exports = function ResourceManager() {
 
     // Provision (allocate or deallocate) resources based on the system load
     this.provision = function() {
-        var systemLoad = 20 * Math.random();
-        //var systemLoad = this.calculateSystemLoad();
+//        var systemLoad = 20 * Math.random();
+        var systemLoad = this.calculateSystemLoad();
         var numInstances = this.instances.length;
 
         console.log("System load: %s, thresholds are %s and %s", systemLoad, config.DEALLOCATION_THRESHOLD, config.ALLOCATION_THRESHOLD);
