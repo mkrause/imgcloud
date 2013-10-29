@@ -207,7 +207,13 @@ module.exports = function ResourceManager() {
         
         console.log("Initialized RM (with %d bootstrap instances)", this.instances.length);
     };
-
+    
+    this.destroyAll = function() {
+        this.instances.forEach(function(instance) {
+            this.markInstanceDead(instance);
+        }, this);
+    };
+    
     this.saveRequestStats = function(instanceId, res) {
         var format = function(num) {
             return num < 10 ? "0" + num : num;
