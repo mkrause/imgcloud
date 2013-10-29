@@ -101,6 +101,9 @@ module.exports = function ResourceManager() {
     };
 
     this.pollInstances = function() {
+        // Store stats
+        this.storeLoads();
+
         console.log("Polling... (%d instances)", this.instances.length);
         this.instances.forEach(function(instance) {
             this.pingInstance(instance)
@@ -141,6 +144,30 @@ module.exports = function ResourceManager() {
 
         return average(instanceLoads);
     };
+
+    this.timestamp = function(date) {
+        if(!date) {
+            date = new Date;
+        }
+
+        var format = function(num) {
+            return num < 10 ? "0" + num : num;
+        }
+
+        return format(date.getHours()) + ":"+ format(date.getMinutes()) + ":" + format(date.getSeconds());
+    };
+
+    this.storeLoads = function() {
+        var time = new Date;
+
+        var data = {}
+        data["imgcloud-systemload-0-"+timestamp(time)] = systemLoad;
+        this.instances.forEach(function(instance) {
+            data["imgcloud-instanceload-"+instance.id+timestamp(time)] = instance.load;
+        });
+
+        this.db.mset(data);
+    }
 
     // Provision (allocate or deallocate) resources based on the system load
     this.provision = function() {
@@ -210,12 +237,8 @@ module.exports = function ResourceManager() {
     };
     
     this.saveRequestStats = function(instanceId, res) {
-        var format = function(num) {
-            return num < 10 ? "0" + num : num;
-        }
-
         var curTime = new Date;
-        var keyBit = instanceId + "-"+format(curTime.getHours()) + ":"+ format(curTime.getMinutes()) + ":" + format(curTime.getSeconds());
+        var keyBit = instanceId + "-"+this.timestamp(curTime);
 
         var values = {}
 
