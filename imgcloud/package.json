@@ -8,6 +8,7 @@
         "express-partials": "*",
         "gm": "1.x.0",
         "cookie": "0.1.x",
-        "then-redis": "0.3.x"
+        "then-redis": "0.3.x",
+        "underscore": "1.5.x"
     }
 }

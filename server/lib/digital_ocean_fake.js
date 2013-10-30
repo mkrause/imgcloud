@@ -48,7 +48,13 @@ module.exports = function DigitalOceanFake() {
             return true;
         });
     };
-    
+
+    this.instances = function() {
+        return Q.fcall(function() {
+            return [];
+        });
+    };
+
     this.getAddress = function(instance) {
         return Q.fcall(function() {
             return 'localhost';
