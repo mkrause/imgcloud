@@ -27,5 +27,5 @@ module.exports = {
     MAX_INSTANCES: 5, // Upper bound on number of instances provisioned
     ALLOCATION_THRESHOLD: 8, // Average load
     DEALLOCATION_THRESHOLD: 2,
-    LOAD_HISTORY_WINDOW_SIZE: 5 // Size of the sliding window for the system load
+    LOAD_HISTORY_WINDOW_SIZE: 3 // Size of the sliding window for the system load
 };
