@@ -200,7 +200,7 @@ module.exports = function ResourceManager() {
             // Enforce lower bound on the number of instances
             if(numInstances > config.MIN_INSTANCES) {
                 var runningInstances = this.getRunningInstances();
-                if (runningInstances.length <= 0) {
+                if (runningInstances.length > 0) {
                     // Randomly kill some instance
                     var victim = runningInstances[0];
                     this.removeInstance(victim);
