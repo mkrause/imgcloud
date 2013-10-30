@@ -23,6 +23,8 @@ module.exports = function ResourceManager() {
 
     // List of application instances
     this.instances = [];
+    
+    this.systemLoad = 0;
 
     // Some ID that is guaranteed to be currently available
     this.availableId = 1;
@@ -46,9 +48,9 @@ module.exports = function ResourceManager() {
         this.availableId += 1;
         return this.digitalOcean.allocate(id)
             .then(function(instance) {
-                self.addInstance(instance);
-                self.db.set("imgcloud-allocation-"+id+"-"+self.timestamp(), 1);
-            });
+                this.addInstance(instance);
+                this.db.set("imgcloud-allocation-"+id+"-"+this.timestamp(), 1);
+            }.bind(this));
     };
 
     this.deallocateInstance = function(instance) {
@@ -129,7 +131,7 @@ module.exports = function ResourceManager() {
                     if (!instance.host) {
                         console.log("pollInstances: %s does not have an address yet", instance);
                         
-                        self.digitalOcean.getAddress(instance)
+                        this.digitalOcean.getAddress(instance)
                             .then(function(address) {
                                 instance.host = address;
                             });
@@ -144,19 +146,24 @@ module.exports = function ResourceManager() {
                     }
 
                     console.log("pollInstances: %s died", instance);
-                    self.markInstanceDead(instance);
-                });
+                    this.markInstanceDead(instance);
+                }.bind(this));
         }, this);
     };
 
     // Calculate the average load over instances in the system
     this.calculateSystemLoad = function() {
+        /*
         var instanceLoads = [];
         this.instances.forEach(function(instance) {
             instanceLoads.push(instance.load);
         }, this);
 
         return average(instanceLoads);
+        */
+        
+        // Just use the most recently reported system load
+        return this.systemLoad;
     };
 
     this.storeLoads = function() {
@@ -275,10 +282,15 @@ module.exports = function ResourceManager() {
                 break;
 
             case "requestEnd":
-                if(req.url == "/images/upload") {
+                if (req.url == "/images/upload") {
                     this.saveRequestStats(instanceId, res);
                 }
                 break;
         }
+    };
+    
+    // Notify the resource manager of a newly calculated system load
+    this.notifySystemLoad = function(systemLoad) {
+        this.systemLoad = systemLoad;
     };
 };
