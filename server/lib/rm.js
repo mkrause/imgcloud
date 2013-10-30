@@ -199,10 +199,13 @@ module.exports = function ResourceManager() {
 
             // Enforce lower bound on the number of instances
             if(numInstances > config.MIN_INSTANCES) {
-                // Randomly kill some instance
-                var victim = this.getRunningInstances()[0];
-                this.removeInstance(victim);
-                this.deallocateInstance(victim);
+                var runningInstances = this.getRunningInstances();
+                if (runningInstances.length <= 0) {
+                    // Randomly kill some instance
+                    var victim = runningInstances[0];
+                    this.removeInstance(victim);
+                    this.deallocateInstance(victim);
+                }
             } else {
                 console.log("provision: did not deallocate due to MIN_INSTANCES");
             }
