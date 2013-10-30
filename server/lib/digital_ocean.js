@@ -45,7 +45,7 @@ module.exports = function DigitalOcean(apiConfig) {
     
     // Create a new instance
     this.allocate = function(id) {
-        var params = clone(this.apiConfig.dropletParams);
+        var params = clone(this.apiConfig.dropletParams(id));
         params.name = 'cc-instance' + id;
         
         return callApi('/droplets/new', params)

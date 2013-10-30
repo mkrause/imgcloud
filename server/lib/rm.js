@@ -259,7 +259,6 @@ module.exports = function ResourceManager() {
 
     // Emit an event
     this.emit = function(eventName, req, res) {
-        console.log("Received " + eventName);
         var instanceId = req.headers['x-imgcloud-host'];
         var instance = this.getInstance(instanceId);
         

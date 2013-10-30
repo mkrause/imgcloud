@@ -30,6 +30,14 @@ var server = httpProxy.createServer(function (req, res, proxy) {
         // Find some instance to which we can pass this request
         var instance = resolve(req, rm);
 
+        if(!instance) {
+            res.writeHead(500, {
+                "Content-Type": "text/plain"
+            });
+            res.end("ProxyNotReady error\n");
+            return;
+        }
+
         // Track the number of pending requests per instance
         if (req.url == "/images/upload") {
             if (!requests[instance.id]) {

@@ -2,27 +2,25 @@ var balancer = require('./balancer');
 var cookie = require('cookie');
 var Memcached = require('memcached');
 
-var mem = new Memcached();
+var config = require('../config.js');
 
 module.exports = function resolve(req, rm) {
-    // Accept user preferences up until this threshold
-    var AB_THRESHOLD = 0.8;
+    var instance = false;
+    if (req.headers.cookie) {
+        var headers = cookie.parse(req.headers["cookie"]);
+        instance = rm.getInstance(headers["imgcloud-host"]);
+    }
 
-//    var previousHost;
-//    if (req.headers["cookie"]) {
-//        var headers = cookie.parse(req.headers["cookie"]);
-//        previousHost = headers["imgcloud-host"].split(",");
-//    }
-    // TODO: sticky users
-    var instance;
-//    if (previousHost) {
-//        console.log({host: previousHost[0], port: previousHost[1]});
-//        instance = rm.getInstance({host: previousHost[0], port: previousHost[1]});
-//        console.log("Redirecting to %s again", instance);
-//        if (instance.load > AB_THRESHOLD) {
-//            instance = null;
-//        }
-//    }
+    // Check if we can keep our promise to redirect the user to the same machine
+    if (instance) {
+        // Accept user preferences up until the allocation threshold for a machine
+        if (!instance.isRunning() || instance.load > config.ALLOCATION_THRESHOLD) {
+            console.log("Redirecting to default instance failed");
+            instance = false;
+        } else {
+            console.log("Redirecting to %s again", instance);
+        }
+    }
 
     // Fallback: ask the load balancer to choose a suitable instance
     if (!instance) {
