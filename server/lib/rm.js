@@ -225,7 +225,7 @@ module.exports = function ResourceManager() {
         }, this);
         
         // Allocate at least our minimum
-        _.forEach(_.range(config.MIN_INSTANCES), function() {
+        _.forEach(_.range(config.MIN_INSTANCES - this.instances.length), function() {
             this.allocateInstance().done(); // Throw any exceptions
         }, this);
         
