@@ -10,3 +10,7 @@ exports.index = function (req, res) {
 exports.ping = function (req, res) {
     res.send('200')
 };
+
+exports.stats = function(req, res) {
+    // TODO: add current system stats
+};
