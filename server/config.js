@@ -14,8 +14,8 @@ module.exports = {
         dropletParams: function (instanceId) {
             return {
                 size_id: 66, // Smallest size
-                image_id: 1000590,  // cc-snapshot1
-                region_id: 2, // ams-1
+                image_id: 1049073,
+                region_id: 1,
                 ssh_key_ids: "9792, 46554"
             }
         }

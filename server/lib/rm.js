@@ -231,10 +231,20 @@ module.exports = function ResourceManager() {
             this.availableId = Math.max(this.availableId, instInfo.id + 1);
         }, this);
         
-        // Allocate at least our minimum
-        _.forEach(_.range(config.MIN_INSTANCES - this.instances.length), function() {
-            this.allocateInstance().done(); // Throw any exceptions
-        }, this);
+        // Fetch existing list from DigitalOcean
+        this.digitalOcean.instances()
+            .then(function(instances) {
+                instances.forEach(function(instance) {
+                    console.log("Re-adding existing instance: " + instance);
+                    this.addInstance(instance);
+                }.bind(this));
+            }.bind(this))
+            .then(function() {
+                // If we still haven't reached it, allocate at least our minimum
+                _.forEach(_.range(config.MIN_INSTANCES - this.instances.length), function() {
+                    this.allocateInstance().done();
+                }, this);
+            }.bind(this));
         
         console.log("Initialized RM (with %d bootstrap instances)", this.instances.length);
     };

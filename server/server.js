@@ -12,12 +12,14 @@ var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
 rm.startProvisioning();
 
+/*
 process.on('SIGINT', function() {
     // Destroy all the things
     rm.destroyAll();
     
     console.log('Cleaning up... Press Control-D to exit.');
 });
+*/
 
 // Number of requests per instance (which we can use to indicate the load of an instance)
 var requests = {};
@@ -27,6 +29,8 @@ var systemLoadHistory = [];
 setInterval(poll, config.POLL_FREQUENCY);
 
 // Start proxy server
+var port = process.env.SERVER_PORT || process.argv[2] || 80;
+console.log("Starting server on port " + port);
 var server = httpProxy.createServer(function (req, res, proxy) {
     try {
         // Find some instance to which we can pass this request
@@ -65,7 +69,7 @@ var server = httpProxy.createServer(function (req, res, proxy) {
 
         res.end("Fail whale:\n" + e.stack + "\n");
     }
-}).listen(process.argv[2] || 80);
+}).listen(port);
 
 server.proxy.on('end', function (req, res) {
     // Lower (and update) the num of open connections for the instance

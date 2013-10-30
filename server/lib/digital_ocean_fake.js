@@ -24,7 +24,7 @@ module.exports = function DigitalOceanFake() {
     
     this.allocate = function(id) {
         return Q.fcall(function() {
-            var port = id;
+            var port = 8000 + id;
             
             // Assumes we're in the 'server' directory
             var proc = spawn('node', ['../imgcloud/server.js', port]);
@@ -46,6 +46,12 @@ module.exports = function DigitalOceanFake() {
             delete processes[id];
             
             return true;
+        });
+    };
+    
+    this.getAddress = function(instance) {
+        return Q.fcall(function() {
+            return 'localhost';
         });
     };
 };

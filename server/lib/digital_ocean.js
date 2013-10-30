@@ -31,7 +31,26 @@ module.exports = function DigitalOcean(apiConfig) {
     this.droplets = function() {
         return callApi('/droplets/')
             .then(function(response) {
-                return response.droplets;
+                // ONLY add droplets that contain "cc-instance"!
+                return response.droplets.filter(function(droplet) {
+                    return droplet.name.indexOf('cc-instance') != -1;
+                });
+            });
+    };
+    
+    // Get the droplet list as instance objects
+    this.instances = function() {
+        return this.droplets()
+            .then(function(droplets) {
+                var instances = [];
+                droplets.forEach(function(droplet) {
+                    instances.push(new Instance(droplet.id, droplet.ip_address, 80));
+                }.bind(this))
+                
+                var instances = droplets.map(function(droplet) {
+                    return new Instance(droplet.id, droplet.ip_address, 80);
+                });
+                return instances;
             });
     };
     
