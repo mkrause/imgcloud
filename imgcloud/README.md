@@ -1,4 +1,3 @@
-
 # imgCloud - Application
 
 This application provides a flexible front-end for users who want to be able to manipulate their images in a user-friendly fashion.
@@ -21,7 +20,7 @@ Installation on Ubuntu/Debian:
 
 ## Running an imgCloud instance
 
-After the downloading the source, run `npm install` in the this (`imgcloud`) directory to download all node modules.
+After the downloading the source, run `npm install` in this (`imgcloud`) directory to download all node modules.
 
 To run the application, simply use:
 
