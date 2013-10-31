@@ -1,4 +1,3 @@
-
 # imgCloud - Front-end server
 
 ## Dependencies
@@ -21,7 +20,7 @@ Copy `params.js.dist` to `params.js`, and enter your DigitalOcean API key, or di
 
 ## Running an imgCloud server
 
-After the downloading the source, run `npm install` in the this (`server`) directory to download all node modules.
+After the downloading the source, run `npm install` in this (`server`) directory to download all node modules.
 
 To run the application, simply use:
 
