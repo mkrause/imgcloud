@@ -1,4 +1,7 @@
 var os = require('os');
+var crypto = require('crypto');
+var fs = require('fs');
+
 /*
  * POST image
  */
@@ -40,30 +43,51 @@ var OPTIONS = {
 }
 
 function processImage(file, options, res) {
-    var image = engine(file.path);
-    image.autoOrient();
+    var shasum = crypto.createHash('md5');
 
-    options.forEach(function (option) {
-        if (OPTIONS[option]) {
-            image = OPTIONS[option].call(image);
-        }
+    var s = fs.ReadStream(file.path);
+    s.on('data', function(d) {
+        shasum.update(d);
     });
 
-    image.write(file.path + ".processed", function (err) {
-        if (err) {
-            renderError(res, err);
-        } else {
-            renderFile(file, res);
-        }
+    s.on('end', function() {
+        var d = shasum.digest('hex');
+        var fname = file.name.split('.');
+        var filename = d + options.sort().join(".") + "." + fname[fname.length - 1];
+
+        fs.exists(filename, function(exists) {
+            if(exists) {
+                // Render cached file
+                renderFile(filename, res);
+            } else {
+                // Perform calculations
+                var image = engine(file.path);
+                image.autoOrient();
+
+                options.forEach(function (option) {
+                    if (OPTIONS[option]) {
+                        image = OPTIONS[option].call(image);
+                    }
+                });
+
+                image.write(filename, function (err) {
+                    if (err) {
+                        renderError(res, err);
+                    } else {
+                        renderFile(filename, res);
+                    }
+                });
+            }
+        });
     });
 }
 
 function renderFile(file, res) {
-    fs.readFile(file.path + ".processed", function (err, data) {
+    fs.readFile(file, function (err, data) {
         if (err) {
             renderError(res, err);
         } else {
-            res.setHeader("Content-Type", file.type);
+            res.attachment(file);
             res.send(data);
         }
     });
