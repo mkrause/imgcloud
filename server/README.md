@@ -15,7 +15,7 @@ Installation on Ubuntu/Debian:
 
 See `config.js` for configuration values. You can use the imgCloud front-end server either locally, or using a IaaS provider. Currently we only support [DigitalOcean](https://digitalocean.com).
 
-Copy `params.js.dist` to `params.js`, and enter your DigitalOcean API key, or disable `useDigitalOcean` if you want to run locally. `params.js` is included in `.gitignore` to prevent you from accidentally committed your API key.
+Copy `params.js.dist` to `params.js`, and enter your DigitalOcean API key, or disable `useDigitalOcean` if you want to run locally. `params.js` is included in `.gitignore` to prevent you from accidentally committing your API key.
 
 
 ## Running an imgCloud server
