@@ -12,15 +12,6 @@ var initialInstances = require('./config.js').initialInstances;
 rm.bootstrap(initialInstances);
 rm.startProvisioning();
 
-/*
-process.on('SIGINT', function() {
-    // Destroy all the things
-    rm.destroyAll();
-    
-    console.log('Cleaning up... Press Control-D to exit.');
-});
-*/
-
 // Number of requests per instance (which we can use to indicate the load of an instance)
 var requests = {};
 var systemLoadHistory = [];
